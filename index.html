@@ -214,6 +214,25 @@ var MISS_RULES = {
 var DRIVER_FLEX = [[85,'Senior'],[95,'Regular'],[105,'Stiff'],[110,'Stiff'],[999,'X-Stiff']];
 var IRON_FLEX = [[65,'Senior'],[75,'Regular'],[85,'Stiff'],[999,'X-Stiff']];
 var GI_CUTOFF = {driver:95, irons:75};
+function spinWindow(speed, cat){
+  // Egor's driver spin benchmarks by club head speed (Oct 2026):
+  // 105+ mph: 1,750-2,300 | 97-104: 2,000-2,500 | 84-96: 2,400-2,700 | <84: 2,600-2,900 (up to 3,000 to stay airborne)
+  if (cat!=='driver') return SPIN_GOOD[cat];
+  var v = Number(speed);
+  if (isNaN(v)) return [2000,2700];
+  if (v>=105) return [1750,2300];
+  if (v>=97) return [2000,2500];
+  if (v>=84) return [2400,2700];
+  return [2600,2900];
+}
+function spinNumber(v){
+  if (!v || v==='skip') return null;
+  if (v==='below1500') return 1400;
+  if (v==='above3000') return 3100;
+  var n = Number(v);
+  return isNaN(n) ? null : n;
+}
+function fmtN(n){ return String(n).replace(/\B(?=(\d{3})+(?!\d))/g,','); }
 // Egor's spin windows (driver): 2,000-2,700 rpm is good. Below = dive bombs,
 // loses carry -> add spin/launch. Above = wind affects it more -> reduce spin.
 // Iron window is a placeholder for him to set.
@@ -344,8 +363,7 @@ function buildQuestions(cat, a){
     {id:'ballBrand',kind:'dropdown',label:'Is there a brand you are interested in trying?',help:'Choose No preference for the widest choice.',opts:[['any','No preference']].concat(BALL_BRANDS.map(function(b){return [b,b];}))}
   ] : cat==='driver' ? [
     {id:'dexterity',kind:'dropdown',label:'Do you play left or right handed?',help:'Heads are built right or left-handed, so this filters out anything you cannot use.',opts:[['R','Right-handed'],['L','Left-handed']]},
-    {id:'speed',kind:'dropdown',label:'What is your club head speed?',help:'Your driver swing speed. Choose Not sure if you do not know it.',opts:[['80','Under 85 mph'],['90','85-95 mph'],['100','95-105 mph'],['107','105-110 mph'],['112','110-115 mph'],['117','115-120 mph'],['125','120+ mph'],['unsure','Not sure']]},
-    {id:'spin',kind:'dropdown',label:'What is your driver spin rate?',help:'Optional - sharing it makes the suggestion more accurate.',opts:[['1900','Under 2,000 rpm'],['2350','2,000-2,700 rpm'],['2850','Over 2,700 rpm'],['skip','Skip / not sure']]},
+    {id:'speed',kind:'speedcombo',label:'What is your club head speed?',help:'Your driver swing speed and spin rate, both measured on a launch monitor. If you know your averages it can really help with the decision - but you can skip this page if you do not.',opts:[]},
     {id:'currentBrand',kind:'clubcombo',label:'What is your current driver?',help:'Brand and model of the driver you play now, so we can compare like for like. Choose Other / not listed if yours is not there.',opts:[]},
     {id:'currentShaftBrand',kind:'shaftcombo',label:'What shaft is in your current driver?',help:'Brand, model, weight and flex are all printed on the shaft - a Ventus Blue 6 S is a Fujikura Ventus Blue, roughly 65g, stiff flex. Choose Not sure for anything you do not know.',opts:[]},
     {id:'likePart',kind:'dropdown',label:'Anything you like about your current set up?',help:'If you love one part, we only suggest the other.',opts:[['head','The head'],['shaft','The shaft'],['both','Both'],['neither','Neither / not sure']]},
@@ -390,11 +408,12 @@ function score(c, a, cat){
   if (c.flex.indexOf(flexFor(a.speed,cat))>=0) s+=2;
   var wantsGI = a.speed!=='unsure' && Number(a.speed) < GI_CUTOFF[cat];
   if ((wantsGI && c.style==='gi') || (!wantsGI && c.style==='players')) s+=1;
-  // spin refinement when the golfer shared it (Egor's windows)
-  if (a.spin && a.spin!=='skip'){
-    var win=SPIN_GOOD[cat];
-    if (Number(a.spin)>win[1] && c.loft==='lower') s+=3;
-    if (Number(a.spin)<win[0] && c.loft==='higher') s+=3;
+  // spin refinement when the golfer shared it (Egor's speed-based windows)
+  var spN=spinNumber(a.spin);
+  if (spN!==null){
+    var win=spinWindow(a.speed,cat);
+    if (spN>win[1] && c.loft==='lower') s+=3;
+    if (spN<win[0] && c.loft==='higher') s+=3;
   }
   if (c.flight===a.flight) s+=1;
   // high swing speed: lower loft/spin heads, avoid ultralight builds (placeholder)
@@ -413,14 +432,15 @@ function reason(c, a, cat){
     parts.push(a.miss==='straight' ? rule.fight : (matchC ? 'Picked to fight your miss: '+rule.fight : 'Picked with your miss in mind'));
   }
   var f=flexFor(a.speed,cat);
-  if (c.flex.indexOf(f)>=0) parts.push(a.speed==='unsure' ? f+' flex is the safe default without your speed' : f+' flex suits your club head speed');
+  if (c.flex.indexOf(f)>=0) parts.push((!a.speed || a.speed==='unsure') ? f+' flex is the safe default without your speed' : f+' flex suits your club head speed');
   if (c.flight===a.flight) parts.push(c.flight+' flight, as you wanted');
   if (a.brand && a.brand!=='Any' && c.brand===a.brand) parts.push('your preferred brand');
   if (validPrefHead(a,cat)===c.model) parts.unshift('It is the head you told us you like');
-  if (a.spin && a.spin!=='skip'){
-    var win=SPIN_GOOD[cat];
-    if (Number(a.spin)<win[0] && c.loft==='higher') parts.push('your spin is outside the optimal 2,000-2,700 window - too little spin can cause dive bombs and carry loss, so this adds launch and spin');
-    if (Number(a.spin)>win[1] && c.loft==='lower') parts.push('your spin is outside the optimal 2,000-2,700 window - too much spin gets affected by the wind, so this brings spin down');
+  var spN2=spinNumber(a.spin);
+  if (spN2!==null){
+    var win=spinWindow(a.speed,cat);
+    if (spN2<win[0] && c.loft==='higher') parts.push('your spin is below the optimal '+fmtN(win[0])+'-'+fmtN(win[1])+' rpm window for your swing speed - too little spin can cause dive bombs and carry loss, so this adds launch and spin');
+    if (spN2>win[1] && c.loft==='lower') parts.push('your spin is above the optimal '+fmtN(win[0])+'-'+fmtN(win[1])+' rpm window for your swing speed - too much spin gets affected by the wind, so this brings spin down');
   }
   return parts.join('; ')+'.';
 }
@@ -432,10 +452,11 @@ function scoreShaft(sh, a, cat){
     if (rule.light && sh.weight==='light') s+=2;
   }
   if (sh.flex.indexOf(flexFor(a.speed,cat))>=0) s+=3;
-  if (a.spin && a.spin!=='skip'){
-    var winS=SPIN_GOOD[cat];
-    if (Number(a.spin)>winS[1]){ if (sh.launch==='low') s+=5; if (sh.launch==='high') s-=2; }
-    if (Number(a.spin)<winS[0]){ if (sh.launch==='high') s+=5; if (sh.launch==='low') s-=2; }
+  var spN3=spinNumber(a.spin);
+  if (spN3!==null){
+    var winS=spinWindow(a.speed,cat);
+    if (spN3>winS[1]){ if (sh.launch==='low') s+=5; if (sh.launch==='high') s-=2; }
+    if (spN3<winS[0]){ if (sh.launch==='high') s+=5; if (sh.launch==='low') s-=2; }
   }
   if (a.flight==='low' && sh.launch==='low') s+=1;
   if (a.flight==='high' && sh.launch==='high') s+=1;
@@ -455,11 +476,12 @@ function shaftReason(sh, a, cat){
     parts.push(a.miss==='straight' ? rule.fight : (matchS ? 'Picked to fight your miss: '+rule.fight : 'Picked with your miss in mind'));
   }
   var f=flexFor(a.speed,cat);
-  if (sh.flex.indexOf(f)>=0) parts.push(a.speed==='unsure' ? f+' flex is the safe default without your speed' : f+' flex suits your club head speed');
-  if (a.spin && a.spin!=='skip'){
-    var winS=SPIN_GOOD[cat];
-    if (Number(a.spin)<winS[0] && sh.launch==='high') parts.push('your spin is outside the optimal 2,000-2,700 window - too little spin can cause dive bombs and carry loss, so this adds launch and spin');
-    if (Number(a.spin)>winS[1] && sh.launch==='low') parts.push('your spin is outside the optimal 2,000-2,700 window - too much spin gets affected by the wind, so this brings spin down');
+  if (sh.flex.indexOf(f)>=0) parts.push((!a.speed || a.speed==='unsure') ? f+' flex is the safe default without your speed' : f+' flex suits your club head speed');
+  var spN4=spinNumber(a.spin);
+  if (spN4!==null){
+    var winS=spinWindow(a.speed,cat);
+    if (spN4<winS[0] && sh.launch==='high') parts.push('your spin is below the optimal '+fmtN(winS[0])+'-'+fmtN(winS[1])+' rpm window for your swing speed - too little spin can cause dive bombs and carry loss, so this adds launch and spin');
+    if (spN4>winS[1] && sh.launch==='low') parts.push('your spin is above the optimal '+fmtN(winS[0])+'-'+fmtN(winS[1])+' rpm window for your swing speed - too much spin gets affected by the wind, so this brings spin down');
   }
   if (validPrefShaft(a,cat)===sh.model) parts.unshift('It is the shaft you told us you like');
   parts.push(sh.note);
@@ -781,6 +803,25 @@ function render(){
       } else if (scB==='other' || scB==='unsure'){
         h += '<div class="cap">No problem - we will allow for that in your matches.</div>';
       }
+    } else if (q.kind==='speedcombo'){
+      var a=state.a;
+      var spdOpts=[['80','Under 85 mph'],['90','85-95 mph'],['100','95-105 mph'],['107','105-110 mph'],['112','110-115 mph'],['117','115-120 mph'],['125','120+ mph']];
+      h += '<div class="eyebrow" style="margin:2px 0 6px">Club head speed (driver)</div>'
+        + '<select class="sel" onchange="setA(\'speed\',this.value)">'
+        + '<option value="" disabled'+(a.speed?'':' selected')+'>Choose...</option>'
+        + spdOpts.map(function(o){ return '<option value="'+o[0]+'"'+(a.speed===o[0]?' selected':'')+'>'+esc(o[1])+'</option>'; }).join('')
+        + '</select>';
+      if (a.speed){
+        var swin=spinWindow(a.speed,state.cat);
+        var spinOpts=[['below1500','Below 1,500 rpm'],['1500','1,500 rpm'],['1750','1,750 rpm'],['2000','2,000 rpm'],['2250','2,250 rpm'],['2500','2,500 rpm'],['2750','2,750 rpm'],['3000','3,000 rpm'],['above3000','Above 3,000 rpm'],['skip','Not sure / skip']];
+        h += '<div class="eyebrow" style="margin:16px 0 6px">Driver spin rate</div>'
+          + '<select class="sel" onchange="setA(\'spin\',this.value)">'
+          + '<option value="" disabled'+(a.spin?'':' selected')+'>Choose...</option>'
+          + spinOpts.map(function(o){ return '<option value="'+o[0]+'"'+(a.spin===o[0]?' selected':'')+'>'+esc(o[1])+'</option>'; }).join('')
+          + '</select>'
+          + '<div class="cap">Good spin at your speed: roughly '+fmtN(swin[0])+'-'+fmtN(swin[1])+' rpm.</div>';
+      }
+      h += '<div class="cap" style="margin-top:16px">If you know your averages it can help with the decision - feel free to skip if you do not.</div>';
     } else if (q.kind==='ballflight'){
       var a=state.a;
       var bfRows=[['What is your current ball flight?','currentFlight',[['low','Low'],['mid','Mid'],['high','High']]],
@@ -817,6 +858,7 @@ function render(){
       var needS = lp2==='head' || lp2==='neither';
       canNext = (!needH || Boolean(state.a.prefHead)) && (!needS || Boolean(state.a.prefShaft));
     }
+    if (q.kind==='speedcombo') canNext = true;
     if (q.kind==='ballflight') canNext = Boolean(state.a.currentFlight) && Boolean(state.a.flightPref) && Boolean(state.a.spinStruggle);
     if (q.kind==='shaftcombo') canNext = Boolean(state.a.currentShaftBrand) && (state.a.currentShaftBrand==='other' || state.a.currentShaftBrand==='unsure' || Boolean(state.a.currentShaftModel));
     var last = state.step===qs.length-1;
@@ -862,13 +904,13 @@ function bookFitting(){ alert('Fitting bookings are coming soon - for now, ask i
   } else if (h==='#results-driver'){
     state={cat:'driver',step:0,done:true,a:{dexterity:'R',speed:'90',spin:'1900',currentBrand:'other',currentModel:'other',likePart:'both',brand:'Any',miss:'low',flight:'high'}};
   } else if (h==='#results-shafts'){
-    state={cat:'driver',step:0,done:true,a:{dexterity:'R',speed:'90',spin:'2850',currentBrand:'TaylorMade',currentModel:'Qi4D Driver',likePart:'head',brand:'Any',miss:'slice',flight:'mid'}};
+    state={cat:'driver',step:0,done:true,a:{dexterity:'R',speed:'90',spin:'2750',currentBrand:'TaylorMade',currentModel:'Qi4D Driver',likePart:'head',brand:'Any',miss:'slice',flight:'mid'}};
   } else if (h==='#results-heads'){
     state={cat:'driver',step:0,done:true,a:{dexterity:'R',speed:'100',spin:'skip',currentBrand:'Ping',currentModel:'other',currentShaftBrand:'Fujikura',currentShaftModel:'Ventus Blue',currentShaftWeight:'60g',currentShaftFlex:'S',likePart:'shaft',brand:'Any',miss:'slice',flight:'mid'}};
   } else if (h==='#results-prefhead'){
     state={cat:'driver',step:0,done:true,a:{dexterity:'R',speed:'100',spin:'skip',currentBrand:'other',currentModel:'other',likePart:'neither',brand:'Ping',prefHead:'G440 LST Driver',miss:'slice',flight:'mid'}};
   } else if (h==='#results-prefshaft'){
-    state={cat:'driver',step:0,done:true,a:{dexterity:'R',speed:'100',spin:'2850',currentBrand:'other',currentModel:'other',currentShaftBrand:'Fujikura',currentShaftModel:'Ventus Blue',likePart:'head',prefShaft:'Project X HZRDUS Black',brand:'Any',miss:'slice',flight:'mid'}};
+    state={cat:'driver',step:0,done:true,a:{dexterity:'R',speed:'100',spin:'2750',currentBrand:'other',currentModel:'other',currentShaftBrand:'Fujikura',currentShaftModel:'Ventus Blue',likePart:'head',prefShaft:'Project X HZRDUS Black',brand:'Any',miss:'slice',flight:'mid'}};
   } else if (h==='#results-ball'){
     state={cat:'ball',step:0,done:true,a:{currentBall:'Pro V1',currentFlight:'mid',flightPref:'lower',spinStruggle:'much',area:'tee',feel:'soft',ballBrand:'any'}};
   } else if (h==='#results-irons'){
