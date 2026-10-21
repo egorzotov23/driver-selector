@@ -221,55 +221,83 @@ var SPIN_GOOD = {driver:[2000,2700], irons:[5000,7000]};
 var BRANDS = ['Any','TaylorMade','Callaway','Ping','Titleist','Cobra','Srixon','Mizuno'];
 // Current tour/mid balls (2024-26 lineups). comp = compression, spin = greenside spin.
 // Attributes from manufacturer positioning - unverified, Egor to confirm.
+// Egor's definitive ball list (42 models, Oct 2026). spin = greenside spin, flight = trajectory,
+// feel = cover/firmness, straight = low long-game spin. Attributes are manufacturer positioning - unverified, Egor to confirm.
+var BALL_BRANDS = ['Titleist','TaylorMade','Srixon','Bridgestone','Callaway','Vice','Wilson','Mizuno'];
 var BALLS = [
-  {id:'b1',brand:'Titleist',model:'Pro V1',comp:'mid',spin:'high',flight:'mid',feel:'soft',straight:false,note:'The benchmark tour ball - soft feel, high greenside spin, mid flight'},
-  {id:'b2',brand:'Titleist',model:'Pro V1x',comp:'high',spin:'high',flight:'high',feel:'firm',straight:false,note:'Higher flight and firmer feel than Pro V1, high spin'},
-  {id:'b3',brand:'Titleist',model:'AVX',comp:'low',spin:'low',flight:'low',feel:'soft',straight:true,note:'Soft, low flight, low long-game spin'},
-  {id:'b4',brand:'Titleist',model:'Pro V1x Left Dash',comp:'high',spin:'low',flight:'high',feel:'firm',straight:true,note:'High flight with low spin - for fast swings wanting less curve'},
-  {id:'b5',brand:'TaylorMade',model:'TP5',comp:'high',spin:'high',flight:'mid',feel:'soft',straight:false,note:'Softest TP5, high wedge spin'},
-  {id:'b6',brand:'TaylorMade',model:'TP5x',comp:'high',spin:'mid',flight:'high',feel:'firm',straight:false,note:'Faster, higher, a touch firmer than TP5'},
-  {id:'b7',brand:'Callaway',model:'Chrome Soft',comp:'mid',spin:'mid',flight:'mid',feel:'soft',straight:false,note:'Soft feel all round, easy to play'},
-  {id:'b8',brand:'Callaway',model:'Chrome Tour',comp:'high',spin:'mid',flight:'mid',feel:'mid',straight:false,note:'Tour performance, balanced spin'},
-  {id:'b9',brand:'Callaway',model:'Chrome Tour X',comp:'high',spin:'high',flight:'high',feel:'firm',straight:false,note:'Callaway\u2019s highest-spin tour ball, strong flight'},
-  {id:'b10',brand:'Srixon',model:'Z-STAR',comp:'mid',spin:'high',flight:'mid',feel:'soft',straight:false,note:'Soft tour ball, lots of greenside spin'},
-  {id:'b11',brand:'Srixon',model:'Z-STAR XV',comp:'high',spin:'high',flight:'high',feel:'firm',straight:false,note:'Firmer, higher-flying Z-STAR for faster swings'},
-  {id:'b12',brand:'Srixon',model:'Z-STAR Diamond',comp:'mid',spin:'mid',flight:'mid',feel:'mid',straight:false,note:'Blend of greenside control and long-game distance'},
-  {id:'b13',brand:'Srixon',model:'Q-STAR TOUR',comp:'low',spin:'mid',flight:'mid',feel:'soft',straight:true,note:'Soft, lower compression - tour-style for moderate speeds'},
-  {id:'b14',brand:'Bridgestone',model:'Tour B RX',comp:'low',spin:'mid',flight:'mid',feel:'mid',straight:true,note:'Built for swing speeds under 105 mph'},
-  {id:'b15',brand:'Bridgestone',model:'Tour B X',comp:'high',spin:'mid',flight:'mid',feel:'firm',straight:false,note:'Firm and fast for 105+ mph swings'},
-  {id:'b16',brand:'Vice',model:'Pro Plus',comp:'high',spin:'low',flight:'high',feel:'firm',straight:true,note:'High flight, low driver spin - distance ball for fast swings'}
+  {brand:'Titleist',model:'Pro V1',spin:'high',flight:'mid',feel:'soft',straight:false,note:'The benchmark tour ball - soft feel, high greenside spin, mid flight'},
+  {brand:'Titleist',model:'Pro V1x',spin:'high',flight:'high',feel:'firm',straight:false,note:'Higher flight and firmer feel than Pro V1, high spin'},
+  {brand:'Titleist',model:'AVX',spin:'low',flight:'low',feel:'soft',straight:true,note:'Softest, lowest-flying Titleist tour ball, low spin'},
+  {brand:'Titleist',model:'Tour Speed',spin:'mid',flight:'mid',feel:'mid',straight:true,note:'Distance-first ball with a tour-style cover'},
+  {brand:'Titleist',model:'Tour Soft',spin:'mid',flight:'mid',feel:'soft',straight:true,note:'Soft feel and straight flight at a friendlier level'},
+  {brand:'Titleist',model:'TruFeel',spin:'low',flight:'mid',feel:'soft',straight:true,note:'Titleist\u2019s softest, lowest-compression ball'},
+  {brand:'TaylorMade',model:'TP5',spin:'high',flight:'mid',feel:'soft',straight:false,note:'Softest TP5, high wedge spin'},
+  {brand:'TaylorMade',model:'TP5x',spin:'mid',flight:'high',feel:'firm',straight:false,note:'Higher-flying, slightly firmer than TP5'},
+  {brand:'TaylorMade',model:'Tour Response',spin:'mid',flight:'mid',feel:'soft',straight:true,note:'Soft feel with a tour-style cover, easy to play'},
+  {brand:'TaylorMade',model:'SpeedSoft',spin:'low',flight:'mid',feel:'soft',straight:true,note:'TaylorMade\u2019s softest, lowest-compression ball'},
+  {brand:'Srixon',model:'Z-Star',spin:'high',flight:'mid',feel:'soft',straight:false,note:'Soft tour ball with lots of greenside spin'},
+  {brand:'Srixon',model:'Z-Star XV',spin:'high',flight:'high',feel:'firm',straight:false,note:'Firmer, higher-flying Z-Star for faster swings'},
+  {brand:'Srixon',model:'Z-Star Diamond',spin:'mid',flight:'mid',feel:'mid',straight:false,note:'Blend of greenside control and long-game distance'},
+  {brand:'Srixon',model:'Q-Star Tour',spin:'mid',flight:'mid',feel:'soft',straight:true,note:'Tour-style cover for moderate swing speeds'},
+  {brand:'Srixon',model:'AD333',spin:'low',flight:'mid',feel:'mid',straight:true,note:'Long-running distance ball, low spin off the tee'},
+  {brand:'Srixon',model:'Soft Feel',spin:'low',flight:'mid',feel:'soft',straight:true,note:'Soft, low compression, easy launch'},
+  {brand:'Bridgestone',model:'Tour B X',spin:'mid',flight:'mid',feel:'firm',straight:false,note:'Firm and fast, built for swing speeds over 105 mph'},
+  {brand:'Bridgestone',model:'Tour B XS',spin:'high',flight:'mid',feel:'soft',straight:false,note:'Softer, spinnier Tour B for fast swings'},
+  {brand:'Bridgestone',model:'Tour B RX',spin:'mid',flight:'mid',feel:'mid',straight:true,note:'Tour ball built for swing speeds under 105 mph'},
+  {brand:'Bridgestone',model:'Tour B RXS',spin:'high',flight:'mid',feel:'soft',straight:false,note:'Soft feel and extra spin for under 105 mph'},
+  {brand:'Bridgestone',model:'e12 Contact',spin:'low',flight:'mid',feel:'mid',straight:true,note:'Straight-distance ball with low driver spin'},
+  {brand:'Bridgestone',model:'e6',spin:'low',flight:'mid',feel:'soft',straight:true,note:'Soft, straight and easy to play'},
+  {brand:'Callaway',model:'Chrome Tour',spin:'mid',flight:'mid',feel:'mid',straight:false,note:'Tour performance with balanced spin'},
+  {brand:'Callaway',model:'Chrome Tour X',spin:'high',flight:'high',feel:'firm',straight:false,note:'Callaway\u2019s highest-spin tour ball, strong flight'},
+  {brand:'Callaway',model:'Chrome Soft',spin:'mid',flight:'mid',feel:'soft',straight:false,note:'Soft feel all round, easy to play'},
+  {brand:'Callaway',model:'ERC Soft',spin:'low',flight:'mid',feel:'soft',straight:true,note:'Soft, distance-focused, with an alignment aid'},
+  {brand:'Callaway',model:'Supersoft',spin:'low',flight:'mid',feel:'soft',straight:true,note:'One of the softest, lowest-compression balls made'},
+  {brand:'Vice',model:'Pro Plus',spin:'low',flight:'high',feel:'firm',straight:true,note:'High flight, low driver spin for fast swings'},
+  {brand:'Vice',model:'Pro',spin:'mid',flight:'mid',feel:'mid',straight:false,note:'All-round tour-style performance'},
+  {brand:'Vice',model:'Pro Air',spin:'mid',flight:'high',feel:'soft',straight:false,note:'High launch built for slower swing speeds'},
+  {brand:'Vice',model:'Tour',spin:'low',flight:'mid',feel:'mid',straight:true,note:'Distance ball with a straight flight'},
+  {brand:'Vice',model:'Drive',spin:'low',flight:'low',feel:'firm',straight:true,note:'Firm, low-flight distance ball for slower speeds'},
+  {brand:'Wilson',model:'Staff Model',spin:'high',flight:'mid',feel:'mid',straight:false,note:'Wilson\u2019s tour ball, high spin'},
+  {brand:'Wilson',model:'Staff Model X',spin:'mid',flight:'high',feel:'firm',straight:false,note:'Firmer, higher-flying Staff Model'},
+  {brand:'Wilson',model:'Triad',spin:'mid',flight:'mid',feel:'mid',straight:true,note:'Balanced, straight-flight ball for breaking 80'},
+  {brand:'Wilson',model:'Duo Soft',spin:'low',flight:'mid',feel:'soft',straight:true,note:'Among the lowest-compression balls made, very soft'},
+  {brand:'Wilson',model:'Fifty Elite',spin:'low',flight:'mid',feel:'mid',straight:true,note:'Soft two-piece distance ball'},
+  {brand:'Mizuno',model:'RB Tour',spin:'high',flight:'mid',feel:'soft',straight:false,note:'Mizuno\u2019s tour ball, stable in the wind'},
+  {brand:'Mizuno',model:'RB Tour X',spin:'high',flight:'high',feel:'firm',straight:false,note:'Firmer, higher-spinning RB Tour'},
+  {brand:'Mizuno',model:'RB Max',spin:'mid',flight:'mid',feel:'mid',straight:false,note:'All-round distance and control'},
+  {brand:'Mizuno',model:'RB 566',spin:'low',flight:'mid',feel:'soft',straight:true,note:'Soft distance ball with low spin'},
+  {brand:'Mizuno',model:'RB 566V',spin:'mid',flight:'high',feel:'soft',straight:false,note:'Higher-launch version of the RB 566'}
 ];
 function scoreBall(b, a){
   var s=0;
-  var sp = a.speed==='unsure' ? null : Number(a.speed);
-  if (sp!==null && !isNaN(sp)){
-    if (sp<85){ if (b.comp==='low') s+=4; if (b.comp==='high') s-=2; }
-    else if (sp<95){ if (b.comp!=='high') s+=3; }
-    else if (sp<105){ if (b.comp!=='low') s+=3; }
-    else { if (b.comp==='high') s+=4; if (b.comp==='low') s-=2; }
-  }
-  if (a.ballPriority==='feel' && b.feel==='soft') s+=4;
-  if (a.ballPriority==='spin' && b.spin==='high') s+=4;
-  if (a.ballPriority==='distance' && (b.flight==='high' || b.spin==='low')) s+=4;
-  if (a.ballPriority==='straight' && b.straight) s+=4;
-  if (b.flight===a.flight) s+=2;
+  var target = a.flightPref==='higher' ? 'high' : a.flightPref==='lower' ? 'low' : a.currentFlight;
+  if (b.flight===target) s+=4;
+  if (a.spinStruggle==='much' && b.spin==='low') s+=4;
+  if (a.spinStruggle==='little' && b.spin==='high') s+=4;
+  if (a.area==='tee' && b.straight) s+=3;
+  if (a.area==='tee' && b.flight==='high') s+=1;
+  if (a.area==='approach' && b.spin!=='low') s+=3;
+  if (a.area==='short' && b.spin==='high') s+=4;
+  if (a.feel && a.feel!=='dontmind' && b.feel===a.feel) s+=4;
   return s;
 }
 function ballReason(b, a){
   var parts=[];
-  var sp = a.speed==='unsure' ? null : Number(a.speed);
-  if (sp!==null && !isNaN(sp)){
-    if (sp<85 && b.comp==='low') parts.push('lower compression suits your swing speed');
-    else if (sp>=105 && b.comp==='high') parts.push('firmer, higher compression holds up to your speed');
-    else if (sp>=85 && sp<105) parts.push('compression suits your swing speed');
-  }
-  if (a.ballPriority==='feel' && b.feel==='soft') parts.push('soft feel, as you wanted');
-  if (a.ballPriority==='spin' && b.spin==='high') parts.push('high greenside spin, as you wanted');
-  if (a.ballPriority==='distance' && (b.flight==='high'||b.spin==='low')) parts.push('built for distance off the tee');
-  if (a.ballPriority==='straight' && b.straight) parts.push('low long-game spin helps calm a curve');
-  if (b.flight===a.flight) parts.push(b.flight+' flight, as you wanted');
+  if (a.flightPref==='higher' && b.flight==='high') parts.push('higher flight than you have now');
+  else if (a.flightPref==='lower' && b.flight==='low') parts.push('lower flight than you have now');
+  else if (a.flightPref==='happy' && b.flight===a.currentFlight) parts.push('keeps the '+a.currentFlight+' flight you are happy with');
+  if (a.spinStruggle==='much' && b.spin==='low') parts.push('low spin helps calm the extra curve');
+  if (a.spinStruggle==='little' && b.spin==='high') parts.push('high spin adds the grab you are missing');
+  if (a.area==='tee' && b.straight) parts.push('low long-game spin helps you find more fairways');
+  if (a.area==='approach' && b.spin!=='low') parts.push('enough spin to hold greens on approach shots');
+  if (a.area==='short' && b.spin==='high') parts.push('high greenside spin for your short game');
+  if (a.feel && a.feel!=='dontmind' && b.feel===a.feel) parts.push(a.feel+' feel, as you wanted');
   parts.push(b.note);
   return parts.join('; ')+'.';
+}
+function mailtoHref(picks){
+  var body='Your Equipment Selector results\n\n'+picks.map(function(p){return p.tier+': '+p.name+'\n'+p.why;}).join('\n\n')+'\n\nGeneral guidance from your answers, not a custom fitting - try them in store before you decide.';
+  return 'mailto:?subject='+encodeURIComponent('My Equipment Selector results')+'&body='+encodeURIComponent(body);
 }
 var DATA_NOTE = 'Demo stock: real 2025/26 models. Some lofts, shafts, bias and ball details unverified.';
 
@@ -309,9 +337,11 @@ function buildQuestions(cat, a){
   var brandOpts = BRANDS.filter(function(b){return b!=='Any';}).map(function(b){return [b,b];});
   brandOpts.push(['other','Other / not listed']);
   var qs = cat==='ball' ? [
-    {id:'speed',kind:'dropdown',label:'What is your driver swing speed?',help:'Ball compression should match your speed - faster swings need firmer balls, slower swings get more from softer ones. Choose Not sure if you do not know it.',opts:[['80','Under 85 mph'],['90','85-95 mph'],['100','95-105 mph'],['110','Over 105 mph'],['unsure','Not sure']]},
-    {id:'ballPriority',kind:'dropdown',label:'What do you want most from your ball?',help:'This drives the picks - there is always a trade-off between distance, feel and spin.',opts:[['distance','Distance off the tee'],['feel','Soft feel'],['spin','More greenside spin'],['straight','Straighter ball flight']]},
-    {id:'flight',kind:'dropdown',label:'What ball flight do you prefer?',help:'Your preferred trajectory tunes the picks.',opts:[['low','Low'],['mid','Mid'],['high','High']]}
+    {id:'currentBall',kind:'dropdown',label:'What ball do you play at the moment?',help:'So we can compare like for like and avoid suggesting the ball you already play. Choose Something else if yours is not listed.',opts:BALLS.map(function(b){return [b.model, b.brand+' '+b.model];}).concat([['other','Something else / not sure']])},
+    {id:'ballflight',kind:'ballflight',label:'How is your ball flight?',help:'Three quick picks about your flight and spin - they tune which ball characteristics we look for.',opts:[]},
+    {id:'area',kind:'dropdown',label:'Where could a ball change help you most?',help:'Different parts of the game want different things from a ball - distance off the tee, stopping power on approach shots, or grab around the greens.',opts:[['tee','Off the tee'],['approach','Approach shots'],['short','Short game']]},
+    {id:'feel',kind:'dropdown',label:'What feel do you prefer?',help:'Soft, firm or somewhere in between.',opts:[['soft','Soft'],['mid','Medium'],['firm','Firm'],['dontmind','Don\u2019t mind']]},
+    {id:'ballBrand',kind:'dropdown',label:'Is there a brand you are interested in trying?',help:'Choose No preference for the widest choice.',opts:[['any','No preference']].concat(BALL_BRANDS.map(function(b){return [b,b];}))}
   ] : cat==='driver' ? [
     {id:'dexterity',kind:'dropdown',label:'Do you play left or right handed?',help:'Heads are built right or left-handed, so this filters out anything you cannot use.',opts:[['R','Right-handed'],['L','Left-handed']]},
     {id:'speed',kind:'dropdown',label:'What is your club head speed?',help:'Your driver swing speed. Choose Not sure if you do not know it.',opts:[['80','Under 85 mph'],['90','85-95 mph'],['100','95-105 mph'],['107','105-110 mph'],['112','110-115 mph'],['117','115-120 mph'],['125','120+ mph'],['unsure','Not sure']]},
@@ -482,7 +512,7 @@ function render(){
                   both: cat==='driver'?'Good news - your driver suits you':'Good news - your irons suit you',
                   shaft: cat==='driver'?'Your shaft matches':'Your iron shaft matches',
                   head: cat==='driver'?'Your head matches':'Your iron head matches'};
-    var intros = {club: cat==='ball'?'Three balls matched to your swing speed and what you want from your ball.':'Three picks from this shop\u2019s stock, each chosen to fight your miss.',
+    var intros = {club: cat==='ball'?'Three balls matched to your answers, each with the reason why.':'Three picks from this shop\u2019s stock, each chosen to fight your miss.',
                   both: 'You like both your current head and shaft, so your current set up is great for you. No change needed - but if you fancy trying something new, here are options worth a look, each chosen to fight your miss.',
                   shaft: 'Keeping your current head. Three new shaft options, each chosen to fight your miss.',
                   head: 'Keeping your current shaftSHAFTNAME. Three head options, each chosen to fight your miss.'};
@@ -496,8 +526,14 @@ function render(){
       + '<button class="big-cta" style="margin:2px 0 16px" onclick="bookFitting()">Book a fitting</button>'
       + (likesBoth && a.currentBrand && a.currentBrand!=='other' && a.currentModel && a.currentModel!=='other'
           ? '<div class="callout note"><span class="t">Keeping your '+esc(a.currentBrand+' '+a.currentModel)+'</span>You said you like it, and nothing here beats a club you already get on with. The picks below are only for trying something different.</div>' : '');
+    var picks=[];
     if (cat==='ball'){
-      var bs=BALLS.map(function(b){return {c:b,s:scoreBall(b,a)};}).sort(function(x,y){return y.s-x.s;});
+      var bpool=BALLS.filter(function(b){return b.model!==a.currentBall;});
+      if (a.ballBrand && a.ballBrand!=='any'){
+        var bp=bpool.filter(function(b){return b.brand===a.ballBrand;});
+        if (bp.length>=3) bpool=bp;
+      }
+      var bs=bpool.map(function(b){return {c:b,s:scoreBall(b,a)};}).sort(function(x,y){return y.s-x.s;});
       var brows=[['Top match',bs[0]],['Also suits you',bs[1]],['Worth a look',bs[2]]].filter(function(r){return r[1];});
       if (brows.length){
         var blead=brows[0][1];
@@ -514,6 +550,7 @@ function render(){
         });
       }
       h += '<div class="cap">* Illustrative match score from placeholder matching logic. Ball specs unverified.</div>';
+      picks=brows.map(function(r){return {tier:r[0],name:r[1].c.brand+' '+r[1].c.model,why:ballReason(r[1].c,a)};});
     } else if (mode==='shaft'){
       var pool2=SHAFTS.filter(function(c){return c.cat===shaftCat && c.price!==null && !(a.currentShaftModel && c.model===a.currentShaftModel);});
       var sc2=pool2.map(function(c){return {c:c,s:scoreShaft(c,a,cat)};});
@@ -541,6 +578,7 @@ function render(){
         });
       }
       h += '<div class="cap">* Illustrative match score from placeholder matching logic. Fitting/labour not included.</div>';
+      picks=srows.map(function(r){return {tier:r[0],name:r[1].c.brand+' '+r[1].c.model,why:shaftReason(r[1].c,a,cat)};});
     } else {
       var pool=STOCK.filter(function(c){return c.cat===cat && c.dex.indexOf(a.dexterity)>=0 && c.price!==null;});
       var scored=pool.map(function(c){return {c:c,s:score(c,a,cat)};});
@@ -569,6 +607,7 @@ function render(){
         });
       }
       h += '<div class="cap">* Illustrative match score from placeholder matching logic. '+DATA_NOTE+'</div>';
+      picks=rows.map(function(r){return {tier:r[0],name:r[1].c.brand+' '+r[1].c.model+' ('+r[1].c.year+')',why:r[1].c.spec+'. '+reason(r[1].c,a,cat)};});
       if (mode==='head'){
         var known = a.currentShaftModel && a.currentShaftModel!=='other' && a.currentShaftModel!=='unsure';
         var cur = known ? SHAFTS.find(function(x){return x.model===a.currentShaftModel && x.cat==='wood';}) : null;
@@ -599,7 +638,9 @@ function render(){
       }
     }
     h += '<div class="callout warn"><span class="t">Before you buy</span>This is general guidance from your answers, not a custom fitting. '+DATA_NOTE+' A live version would show the shop\u2019s real stock and pricing.</div>'
-      + '<div class="navrow"><button class="nav-back" onclick="back()">\u2039 Back</button><button class="nav-next" onclick="restart()">Start again</button></div>'
+      + '<div class="navrow" style="flex-wrap:wrap"><button class="nav-back" onclick="back()">\u2039 Back</button>'
+      + '<a class="nav-next" style="text-decoration:none;text-align:center" href="'+mailtoHref(picks)+'">Email me these results</a>'
+      + '<button class="nav-next" style="flex:0 0 110px;background:var(--teal)" onclick="restart()">Home</button></div>'
       + '<div class="closing">Iron, wedge and putter selectors are in development. Prototype for shop demos. No purchase or reservation happens here.</div></div>';
   } else {
     var qs=buildQuestions(state.cat, state.a);
@@ -740,6 +781,19 @@ function render(){
       } else if (scB==='other' || scB==='unsure'){
         h += '<div class="cap">No problem - we will allow for that in your matches.</div>';
       }
+    } else if (q.kind==='ballflight'){
+      var a=state.a;
+      var bfRows=[['What is your current ball flight?','currentFlight',[['low','Low'],['mid','Mid'],['high','High']]],
+                  ['Would you prefer a lower or higher ball flight?','flightPref',[['lower','Lower'],['higher','Higher'],['happy','Happy where I am']]],
+                  ['How is your spin?','spinStruggle',[['much','Too much spin'],['little','Not enough spin'],['happy','Happy with my spin']]]];
+      bfRows.forEach(function(rw,i){
+        var bv=a[rw[1]];
+        h += '<div class="eyebrow" style="margin:'+(i?16:2)+'px 0 6px">'+esc(rw[0])+'</div>'
+          + '<select class="sel" onchange="setA(\''+rw[1]+'\',this.value)">'
+          + '<option value="" disabled'+(bv?'':' selected')+'>Choose...</option>'
+          + rw[2].map(function(o){ return '<option value="'+o[0]+'"'+(bv===o[0]?' selected':'')+'>'+esc(o[1])+'</option>'; }).join('')
+          + '</select>';
+      });
     } else if (q.id==='flight'){
       var stops=q.opts;
       var idx=-1;
@@ -763,6 +817,7 @@ function render(){
       var needS = lp2==='head' || lp2==='neither';
       canNext = (!needH || Boolean(state.a.prefHead)) && (!needS || Boolean(state.a.prefShaft));
     }
+    if (q.kind==='ballflight') canNext = Boolean(state.a.currentFlight) && Boolean(state.a.flightPref) && Boolean(state.a.spinStruggle);
     if (q.kind==='shaftcombo') canNext = Boolean(state.a.currentShaftBrand) && (state.a.currentShaftBrand==='other' || state.a.currentShaftBrand==='unsure' || Boolean(state.a.currentShaftModel));
     var last = state.step===qs.length-1;
     h += '<div class="navrow"><button class="nav-back" onclick="back()">\u2039 Back</button>'
@@ -815,7 +870,7 @@ function bookFitting(){ alert('Fitting bookings are coming soon - for now, ask i
   } else if (h==='#results-prefshaft'){
     state={cat:'driver',step:0,done:true,a:{dexterity:'R',speed:'100',spin:'2850',currentBrand:'other',currentModel:'other',currentShaftBrand:'Fujikura',currentShaftModel:'Ventus Blue',likePart:'head',prefShaft:'Project X HZRDUS Black',brand:'Any',miss:'slice',flight:'mid'}};
   } else if (h==='#results-ball'){
-    state={cat:'ball',step:0,done:true,a:{speed:'110',ballPriority:'straight',flight:'high'}};
+    state={cat:'ball',step:0,done:true,a:{currentBall:'Pro V1',currentFlight:'mid',flightPref:'lower',spinStruggle:'much',area:'tee',feel:'soft',ballBrand:'any'}};
   } else if (h==='#results-irons'){
     state={cat:'irons',step:0,done:true,a:{dexterity:'R',speed:'70',spin:'skip',currentBrand:'other',currentModel:'other',likePart:'both',brand:'Any',miss:'fat',flight:'high'}};
   }
