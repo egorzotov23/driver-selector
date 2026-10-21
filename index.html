@@ -414,6 +414,16 @@ function score(c, a, cat){
     if (spN<win[0] && c.loft==='higher') s+=3;
   }
   if (c.flight===a.flight) s+=1;
+  // Egor: under 105 mph with spin at or below 2,000 rpm -> steer toward spinnier heads
+  if (cat==='driver'){
+    var vSlow=Number(a.speed);
+    var spSlow=spinNumber(a.spin);
+    if (!isNaN(vSlow) && vSlow<105 && spSlow!==null && spSlow<=2000){
+      if (c.style==='gi') s+=3;
+      if (c.loft==='higher') s+=3;
+      if (c.bias==='draw') s+=2;
+    }
+  }
   // Egor: no spinny heads (high-MOI/draw/higher-loft) above 110 mph, unless their spin is already under 2,000 rpm
   if (cat==='driver'){
     var v110=Number(a.speed);
@@ -454,6 +464,8 @@ function reason(c, a, cat){
     var v110r=Number(a.speed);
     var spFr=spinNumber(a.spin);
     if (!isNaN(v110r) && v110r>110 && !(spFr!==null && spFr<2000) && c.loft==='lower') parts.push('low-spin head suits your swing speed');
+    var vSlowR=Number(a.speed);
+    if (!isNaN(vSlowR) && vSlowR<105 && spFr!==null && spFr<=2000 && (c.style==='gi' || c.loft==='higher')) parts.push('with your speed and low spin, a spinnier, more forgiving head helps keep the ball airborne');
   }
   var spN2=spinNumber(a.spin);
   if (spN2!==null){
