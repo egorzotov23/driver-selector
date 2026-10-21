@@ -353,16 +353,20 @@ function wedgeReason(w, a){
   return parts.join('; ')+'.';
 }
 // Current 2026 putter lineups - models verified from press/retail sources, unverified, Egor to confirm.
-var PUTTER_BRANDS = ['Titleist','TaylorMade','Callaway','Ping','Cobra','Cleveland','Mizuno'];
+var PUTTER_BRANDS = ['Titleist (Scotty Cameron)','TaylorMade','Odyssey','Toulon','Ping','Cobra','Cleveland','Mizuno','Bettinardi','Evnroll','LAB Golf'];
 // Neck options per brand: null = brand has no matching model (flagged in results). All specs unverified.
 var PUTTERS = [
-  {brand:'Titleist',maker:'Scotty Cameron',blade:'Studio Style Newport 2',mallet:'Phantom 11',note:'The milled tour standard',neck:{plumbers:'Studio Style Newport 2',slant:'Studio Style Newport 2.5',doublebend:'Phantom 11 DB',zero:null}},
-  {brand:'TaylorMade',blade:'TP Juno',mallet:'Spider Tour X',note:'Spider Tour X - the most-played mallet on tour',neck:{plumbers:'TP Soto',slant:'Spider Tour',doublebend:'Spider Tour X',zero:'Spider ZT'}},
-  {brand:'Callaway',maker:'Odyssey',blade:'Ai-ONE #1',mallet:'Ai-ONE Rossie',note:'Soft insert feel, huge range',neck:{plumbers:'Ai-ONE #1',slant:'Ai-ONE Seven S',doublebend:'Ai-ONE Rossie DB',zero:'Ai-ONE Square 2 Square'}},
-  {brand:'Ping',blade:'Scottsdale Anser',mallet:'DS72',note:'Fit-for-stroke fitting pioneers',neck:{plumbers:'Scottsdale Anser',slant:'Scottsdale Anser 2D',doublebend:'Scottsdale DS72',zero:null}},
-  {brand:'Cobra',blade:'King Vintage',mallet:'3D Printed Agera',note:'Strong value, 3D-printed tech',neck:{plumbers:'King Vintage Sport',slant:'King Vintage Nova',doublebend:'3D Printed Agera',zero:null}},
-  {brand:'Cleveland',blade:'HB Soft 2',mallet:'Frontline Elite',note:'Great value and alignment help',neck:{plumbers:'HB Soft 2 #1',slant:'HB Soft 2 #11',doublebend:'Frontline Elite 8.0',zero:null}},
-  {brand:'Mizuno',blade:'M.Craft Osaka',mallet:'M.Craft Omoi',note:'Forged feel',neck:{plumbers:'M.Craft Osaka I',slant:'M.Craft Osaka II',doublebend:'M.Craft Omoi',zero:null}}
+  {brand:'Titleist (Scotty Cameron)',blade:'Scotty Cameron Studio Style Newport 2',mallet:'Scotty Cameron Phantom 11',note:'The milled tour standard',neck:{plumbers:'Scotty Cameron Studio Style Newport 2',slant:'Scotty Cameron Studio Style Newport 2.5',doublebend:'Scotty Cameron Phantom 11 DB',zero:null}},
+  {brand:'TaylorMade',blade:'TaylorMade TP Soto',mallet:'TaylorMade Spider Tour X',note:'Spider Tour X - the most-played mallet on tour',neck:{plumbers:'TaylorMade TP Soto',slant:'TaylorMade Spider Tour',doublebend:'TaylorMade Spider Tour X',zero:'TaylorMade Spider ZT'}},
+  {brand:'Odyssey',blade:'Odyssey Ai-ONE #1',mallet:'Odyssey Ai-ONE Rossie',note:'Callaway-owned - soft insert feel, huge range',neck:{plumbers:'Odyssey Ai-ONE #1',slant:'Odyssey Ai-ONE Seven S',doublebend:'Odyssey Ai-ONE Rossie DB',zero:'Odyssey Ai-ONE Square 2 Square'}},
+  {brand:'Toulon',blade:'Toulon San Diego',mallet:'Toulon Alcatraz',note:'Callaway-owned premium milled line',neck:{plumbers:'Toulon San Diego',slant:'Toulon Atlanta',doublebend:'Toulon Alcatraz',zero:null}},
+  {brand:'Ping',blade:'Ping Scottsdale Anser',mallet:'Ping DS72',note:'Fit-for-stroke fitting pioneers',neck:{plumbers:'Ping Scottsdale Anser',slant:'Ping Scottsdale Anser 2D',doublebend:'Ping Scottsdale DS72',zero:null}},
+  {brand:'Cobra',blade:'Cobra King Vintage Sport',mallet:'Cobra 3D Printed Agera',note:'Strong value, 3D-printed tech',neck:{plumbers:'Cobra King Vintage Sport',slant:'Cobra King Vintage Nova',doublebend:'Cobra 3D Printed Agera',zero:null}},
+  {brand:'Cleveland',blade:'Cleveland HB Soft 2 #1',mallet:'Cleveland Frontline Elite',note:'Great value and alignment help',neck:{plumbers:'Cleveland HB Soft 2 #1',slant:'Cleveland HB Soft 2 #11',doublebend:'Cleveland Frontline Elite 8.0',zero:null}},
+  {brand:'Mizuno',blade:'Mizuno M.Craft Osaka I',mallet:'Mizuno M.Craft Omoi',note:'Forged feel',neck:{plumbers:'Mizuno M.Craft Osaka I',slant:'Mizuno M.Craft Osaka II',doublebend:'Mizuno M.Craft Omoi',zero:null}},
+  {brand:'Bettinardi',blade:'Bettinardi BB1',mallet:'Bettinardi Inovai 10.0',note:'US-milled premium',neck:{plumbers:'Bettinardi BB1',slant:'Bettinardi BB8',doublebend:'Bettinardi Inovai 10.0',zero:null}},
+  {brand:'Evnroll',blade:'Evnroll ER2',mallet:'Evnroll ER5',note:'Sweet-face groove tech',neck:{plumbers:'Evnroll ER2',slant:'Evnroll ER8',doublebend:'Evnroll ER5',zero:'Evnroll ZERO Z1'}},
+  {brand:'LAB Golf',blade:'LAB Link.1',mallet:'LAB DF3',note:'Zero torque specialists',neck:{plumbers:'LAB Link.1',slant:'LAB Oz.1',doublebend:'LAB Mezz.1',zero:'LAB DF3'}}
 ];
 var NECK_LABEL = {plumbers:'Plumbers Neck',slant:'Slant Neck',doublebend:'Double Bend',zero:'Center Shaft / Zero Torque'};
 function putterType(a){
@@ -743,7 +747,7 @@ function render(){
           if (nm){ model = nm; }
           else { model = r.c.neck.doublebend; neckFlag = 'No '+NECK_LABEL[a.neck]+' model - closest match is the Double Bend version. '; }
         }
-        var full = (r.c.maker?r.c.maker+' ':'')+model;
+        var full = model;
         var lbl = (a.putterBrand && a.putterBrand!=='any' && i===0) ? 'Your pick - '+r.c.brand : 'Best '+r.c.brand;
         h += '<div class="opt"><div><div class="tiername">'+lbl+'</div><div class="name">'+esc(full)+'</div>'
           + '<div class="detail">'+esc(neckFlag+cap(pt.shape)+' - '+pt.balance+(a.neck&&a.neck!=='any'?', '+NECK_LABEL[a.neck]:'')+' (spec unverified)')+'. '+esc(putterReason(r.c,a))+'</div></div></div>';
@@ -753,7 +757,7 @@ function render(){
       picks=prows.map(function(r){
         var m = pt.shape==='blade' ? r.c.blade : r.c.mallet;
         if (a.neck && a.neck!=='any' && r.c.neck[a.neck]) m = r.c.neck[a.neck];
-        return {tier:'Best '+r.c.brand,name:(r.c.maker?r.c.maker+' ':'')+m,why:cap(pt.balance)+' '+pt.shape+'; '+putterReason(r.c,a)};
+        return {tier:'Best '+r.c.brand,name:m,why:cap(pt.balance)+' '+pt.shape+'; '+putterReason(r.c,a)};
       });
     } else if (cat==='wedge'){
       var ws=wedgeSetup(a);
@@ -1182,7 +1186,7 @@ function bookFitting(){ alert('Fitting bookings are coming soon - for now, ask i
   } else if (h==='#results-putter-neck'){
     state={cat:'putter',step:0,done:true,a:{dexterity:'R',stroke:'slight',pmiss:'none',shape:'any',feel:'any',neck:'plumbers',putterBrand:'any'}};
   } else if (h==='#results-putter-brand'){
-    state={cat:'putter',step:0,done:true,a:{dexterity:'L',stroke:'strong',pmiss:'none',shape:'blade',feel:'firm',neck:'any',putterBrand:'Titleist'}};
+    state={cat:'putter',step:0,done:true,a:{dexterity:'L',stroke:'strong',pmiss:'none',shape:'blade',feel:'firm',neck:'any',putterBrand:'Titleist (Scotty Cameron)'}};
   } else if (h==='#results-wedge'){
     state={cat:'wedge',step:0,done:true,a:{dexterity:'R',pwLoft:'46',delivery:'steep',ground:'soft',struggle:'bunkers',face:'square',wedgeBrand:'any'}};
   } else if (h==='#results-wedge-brand'){
@@ -1199,4 +1203,4 @@ function bookFitting(){ alert('Fitting bookings are coming soon - for now, ask i
 </html>
 
 
-<!-- build v41 -->
+<!-- build v42 -->
