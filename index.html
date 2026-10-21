@@ -826,7 +826,7 @@ function render(){
       }
       if (ccB){
         var missOpts = cat==='driver'
-          ? [['hook','Hook'],['low','Too low launching'],['high','Too high launching'],['slice','Slice'],['straight','Happy with my current ball flight']]
+          ? [['hook','Hook'],['low','Too low launching (not enough spin)'],['high','Too high launching (too much spin)'],['slice','Slice'],['straight','Happy with my current ball flight']]
           : [['thin','Thin'],['fat','Fat / heavy'],['slice','Slice'],['hook','Hook'],['high','Too high'],['low','Too low'],['straight','Fairly straight']];
         h += '<div class="eyebrow" style="margin:16px 0 6px">Current miss</div>'
           + '<select class="sel" onchange="setA(\'miss\',this.value)">'
