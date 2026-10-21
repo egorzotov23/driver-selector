@@ -314,6 +314,44 @@ function ballReason(b, a){
   parts.push(b.note);
   return parts.join('; ')+'.';
 }
+// Current 2026 wedge lineups. Grind letters are the brand's own naming for that bounce level - unverified, Egor to confirm.
+var WEDGE_BRANDS = ['Titleist','TaylorMade','Callaway','Ping','Cobra','Cleveland','Mizuno'];
+var WEDGES = [
+  {brand:'Titleist',model:'Vokey SM11',grinds:{low:'T',mid:'S',high:'D'},note:'The tour benchmark - six grinds, lofts 44-62'},
+  {brand:'TaylorMade',model:'MG5',grinds:{low:'LB',mid:'SB',high:'HB'},note:'Milled sole, raw face that rusts for grip'},
+  {brand:'Callaway',model:'Opus SP',grinds:{low:'T',mid:'S',high:'W'},note:'Spin-forward tour wedge, four grinds'},
+  {brand:'Ping',model:'s259',grinds:{low:'T',mid:'S',high:'W'},note:'Six grinds - one of the widest ranges going'},
+  {brand:'Cobra',model:'King',grinds:{low:'Low',mid:'Versatile',high:'WideLow'},note:'Softer feel, strong value'},
+  {brand:'Cleveland',model:'RTZ',grinds:{low:'Low V',mid:'Mid V',high:'Full V'},note:'The short-game specialists, V-sole design'},
+  {brand:'Mizuno',model:'Pro T-1',grinds:{low:'S',mid:'M',high:'X'},note:'Forged feel, tour-proven sole shapes'}
+];
+function wedgeSetup(a){
+  var pw = (!a.pwLoft || a.pwLoft==='unsure') ? 46 : Number(a.pwLoft);
+  var gap = pw+4, sand = pw+8, lob = pw+12;
+  var highB = a.delivery==='steep' || a.ground==='soft' || a.struggle==='bunkers' || a.struggle==='rough';
+  var lowB = !highB && (a.delivery==='shallow' || a.ground==='firm' || a.struggle==='tight' || a.struggle==='flop');
+  var bounce = highB ? 'high' : lowB ? 'low' : 'mid';
+  // face-openers and flop players still want a low-bounce, versatile lob wedge
+  var lobBounce = (a.struggle==='flop' || a.face==='open') ? 'low' : bounce;
+  return {gap:gap, sand:sand, lob:lob, bounce:bounce, lobBounce:lobBounce};
+}
+function wedgeReason(w, a){
+  var parts=[];
+  var ws=wedgeSetup(a);
+  parts.push('gaps from your '+((!a.pwLoft||a.pwLoft==='unsure')?'typical 46':a.pwLoft)+'\u00B0 pitching wedge: '+ws.gap+'\u00B0 / '+ws.sand+'\u00B0 / '+ws.lob+'\u00B0');
+  if (a.delivery==='steep') parts.push('steep delivery - more bounce stops the club digging');
+  if (a.delivery==='shallow') parts.push('shallow delivery - less bounce keeps the leading edge down');
+  if (a.ground==='soft') parts.push('soft ground suits higher bounce');
+  if (a.ground==='firm') parts.push('firm ground suits lower bounce');
+  if (a.struggle==='bunkers') parts.push('higher-bounce sand wedge for the bunkers');
+  if (a.struggle==='tight') parts.push('lower bounce slides under the ball on tight lies');
+  if (a.struggle==='rough') parts.push('more bounce and a fuller sole help out of heavy rough');
+  if (a.struggle==='flop') parts.push('a versatile low-bounce lob wedge for open-face shots');
+  if (a.struggle==='distance') parts.push('a solid mid-bounce gap wedge for full-swing distance control');
+  if (a.face==='open') parts.push('versatile grind for opening the face');
+  parts.push(w.note);
+  return parts.join('; ')+'.';
+}
 function mailtoHref(picks){
   var body='Your Equipment Selector results\n\n'+picks.map(function(p){return p.tier+': '+p.name+'\n'+p.why;}).join('\n\n')+'\n\nGeneral guidance from your answers, not a custom fitting - try them in store before you decide.';
   return 'mailto:?subject='+encodeURIComponent('My Equipment Selector results')+'&body='+encodeURIComponent(body);
@@ -361,6 +399,12 @@ function buildQuestions(cat, a){
     {id:'area',kind:'dropdown',label:'Where could a ball change help you most?',help:'Different parts of the game want different things from a ball - distance off the tee, stopping power on approach shots, or grab around the greens.',opts:[['tee','Off the tee'],['approach','Approach shots'],['short','Short game']]},
     {id:'feel',kind:'dropdown',label:'What feel do you prefer?',help:'Soft, firm or somewhere in between.',opts:[['soft','Soft'],['mid','Medium'],['firm','Firm'],['dontmind','Don\u2019t mind']]},
     {id:'ballBrand',kind:'dropdown',label:'Is there a brand you are interested in trying?',help:'Choose No preference for the widest choice.',opts:[['any','No preference']].concat(BALL_BRANDS.map(function(b){return [b,b];}))}
+  ] : cat==='wedge' ? [
+    {id:'pwLoft',kind:'dropdown',label:'What loft is your pitching wedge?',help:'Wedges are fitted to fill the gaps from your pitching wedge - usually 4-6 degree steps. Choose Not sure and we use a typical 46 degrees.',opts:[['43','43\u00B0'],['44','44\u00B0'],['45','45\u00B0'],['46','46\u00B0'],['47','47\u00B0'],['48','48\u00B0'],['unsure','Not sure']]},
+    {id:'wedgeswing',kind:'wedgecombo',label:'Your swing and where you play',help:'Delivery and ground conditions decide how much bounce you need - bounce stops the club digging or skidding.',opts:[]},
+    {id:'struggle',kind:'dropdown',label:'What do you struggle with most around the greens?',help:'This picks the wedge traits that counter it.',opts:[['bunkers','Bunkers'],['tight','Tight or firm lies'],['rough','Heavy rough'],['flop','Flop shots / open-face shots'],['distance','Distance control on full shots']]},
+    {id:'face',kind:'dropdown',label:'Do you open the face for different shots?',help:'Face-openers need a versatile grind; standard shots can use a fuller sole.',opts:[['open','Yes - I play a variety of shots'],['square','Mostly standard shots']]},
+    {id:'wedgeBrand',kind:'dropdown',label:'Is there a brand you are interested in trying?',help:'Choose No preference for the widest choice.',opts:[['any','No preference']].concat(WEDGE_BRANDS.map(function(b){return [b,b];}))}
   ] : cat==='driver' ? [
     {id:'dexterity',kind:'dropdown',label:'Do you play left or right handed?',help:'Heads are built right or left-handed, so this filters out anything you cannot use.',opts:[['R','Right-handed'],['L','Left-handed']]},
     {id:'speed',kind:'speedcombo',label:'What is your club head speed?',help:'Your driver swing speed and spin rate, both measured on a launch monitor. If you know your averages it can really help with the decision - but you can skip this page if you do not.',opts:[]},
@@ -551,7 +595,7 @@ function render(){
       + '<div class="tile tile-link" onclick="pick(\'driver\')">Driver<span>Start</span></div>'
       + '<div class="tile tile-link" onclick="pick(\'ball\')">Golf balls<span>Start</span></div>'
       + '<div class="tile">Irons<span>Coming soon</span></div>'
-      + '<div class="tile">Wedges<span>Coming soon</span></div>'
+      + '<div class="tile tile-link" onclick="pick(\'wedge\')">Wedges<span>Start</span></div>'
       + '<div class="tile">Putters<span>Coming soon</span></div></div>'
       + '<h2>How it works</h2><ul><li>A few quick questions about your game - one per screen, all dropdowns.</li><li>Your swing and your miss drive the picks: features that counter it.</li><li>Three matched options, each with the reason why - then try them in store.</li></ul>'
       + '<div class="callout note"><span class="t">Guidance, not a fitting</span>Recommendations here are general guidance from your answers, not a custom fitting. Nothing is reserved or bought from this page.</div>'
@@ -561,11 +605,11 @@ function render(){
     var mode = a.likePart==='head' ? 'shaft' : (a.likePart==='shaft' ? 'head' : 'club');
     var likesBoth = a.likePart==='both';
     var shaftCat = cat==='driver' ? 'wood' : 'iron';
-    var titles = {club: cat==='driver'?'Your driver matches':(cat==='ball'?'Your ball matches':'Your iron matches'),
+    var titles = {club: cat==='driver'?'Your driver matches':(cat==='ball'?'Your ball matches':(cat==='wedge'?'Your wedge setup':'Your iron matches')),
                   both: cat==='driver'?'Good news - your driver suits you':'Good news - your irons suit you',
                   shaft: cat==='driver'?'Your shaft matches':'Your iron shaft matches',
                   head: cat==='driver'?'Your head matches':'Your iron head matches'};
-    var intros = {club: cat==='ball'?'Balls matched to your answers, each with the reason why.':'The best match from each brand in stock, each chosen to fight your miss.',
+    var intros = {club: cat==='ball'?'Balls matched to your answers, each with the reason why.':(cat==='wedge'?'A wedge setup with lofts, bounce and grinds matched to your swing and conditions.':'The best match from each brand in stock, each chosen to fight your miss.'),
                   both: 'You like both your current head and shaft, so your current set up is great for you. No change needed - but if you fancy trying something new, here are options worth a look, each chosen to fight your miss.',
                   shaft: 'Keeping your current head. Three new shaft options, each chosen to fight your miss.',
                   head: 'Keeping your current shaftSHAFTNAME. The best head from each brand, each chosen to fight your miss.'};
@@ -624,6 +668,25 @@ function render(){
       }
       h += '<div class="cap">* Illustrative match score from placeholder matching logic. Ball specs unverified.</div>';
       picks=brows.map(function(r){return {tier:r[0],name:r[1].c.brand+' '+r[1].c.model,why:ballReason(r[1].c,a)};});
+    } else if (cat==='wedge'){
+      var ws=wedgeSetup(a);
+      var bounceWord={low:'lower bounce',mid:'mid bounce',high:'higher bounce'};
+      h += '<div class="res-hero"><span class="tier">Your suggested setup</span>'
+        + '<div class="name">'+ws.gap+'\u00B0 / '+ws.sand+'\u00B0 / '+ws.lob+'\u00B0</div>'
+        + '<div class="whyfit">Gap wedge '+ws.gap+'\u00B0 and sand wedge '+ws.sand+'\u00B0 in '+bounceWord[ws.bounce]+'; lob wedge '+ws.lob+'\u00B0 in '+bounceWord[ws.lobBounce]+'. Gaps follow your pitching wedge, bounce follows your swing and conditions.</div></div>';
+      var wrows=WEDGES.map(function(w){return {c:w};});
+      if (a.wedgeBrand && a.wedgeBrand!=='any'){
+        wrows.sort(function(x,y){ return (x.c.brand===a.wedgeBrand?0:1)-(y.c.brand===a.wedgeBrand?0:1); });
+        wrows[0] = wrows[0]; // chosen brand first
+      }
+      h += '<h2 class="also">The best wedge for it from each brand</h2>';
+      wrows.forEach(function(r,i){
+        var lbl = (a.wedgeBrand && a.wedgeBrand!=='any' && i===0) ? 'Your pick - '+r.c.brand : 'Best '+r.c.brand;
+        h += '<div class="opt"><div><div class="tiername">'+lbl+'</div><div class="name">'+esc(r.c.brand+' '+r.c.model)+'</div>'
+          + '<div class="detail">'+esc(ws.gap+'\u00B0 '+r.c.grinds[ws.bounce]+' grind, '+ws.sand+'\u00B0 '+r.c.grinds[ws.bounce]+' grind, '+ws.lob+'\u00B0 '+r.c.grinds[ws.lobBounce]+' grind (grind options unverified)')+'. '+esc(wedgeReason(r.c,a))+'</div></div></div>';
+      });
+      h += '<div class="cap">* Lofts follow your pitching wedge; bounce and grind follow your answers. Grind options per model unverified.</div>';
+      picks=wrows.map(function(r){return {tier:'Best '+r.c.brand,name:r.c.brand+' '+r.c.model,why:ws.gap+'/'+ws.sand+'/'+ws.lob+', '+wedgeReason(r.c,a)};});
     } else if (mode==='shaft'){
       var pool2=SHAFTS.filter(function(c){return c.cat===shaftCat && c.price!==null && !(a.currentShaftModel && c.model===a.currentShaftModel);});
       var sc2=pool2.map(function(c){return {c:c,s:scoreShaft(c,a,cat)};});
@@ -722,7 +785,7 @@ function render(){
       + '<div class="navrow" style="flex-wrap:wrap"><button class="nav-back" onclick="back()">\u2039 Back</button>'
       + '<a class="nav-next" style="text-decoration:none;text-align:center" href="'+mailtoHref(picks)+'">Email me these results</a>'
       + '<button class="nav-next" style="flex:0 0 110px;background:var(--teal)" onclick="restart()">Home</button></div>'
-      + '<div class="closing">Iron, wedge and putter selectors are in development. Prototype for shop demos. No purchase or reservation happens here.</div></div>';
+      + '<div class="closing">Iron and putter selectors are in development. Prototype for shop demos. No purchase or reservation happens here.</div></div>';
   } else {
     var qs=buildQuestions(state.cat, state.a);
     var q=qs[state.step], val=state.a[q.id];
@@ -894,6 +957,20 @@ function render(){
           + '<div class="cap">Good spin at your speed: roughly '+fmtN(swin[0])+'-'+fmtN(swin[1])+' rpm.</div>';
       }
       h += '<div class="cap" style="margin-top:16px">If you know your averages it can help with the decision - feel free to skip if you do not.</div>';
+    } else if (q.kind==='wedgecombo'){
+      var a=state.a;
+      var dlOpts=[['steep','Steep - I take divots'],['shallow','Shallow - I sweep it'],['unsure','Not sure']];
+      var grOpts=[['soft','Soft or wet'],['average','Average parkland'],['firm','Firm or links']];
+      h += '<div class="eyebrow" style="margin:2px 0 6px">How do you deliver the club with wedges?</div>'
+        + '<select class="sel" onchange="setA(\'delivery\',this.value)">'
+        + '<option value="" disabled'+(a.delivery?'':' selected')+'>Choose...</option>'
+        + dlOpts.map(function(o){ return '<option value="'+o[0]+'"'+(a.delivery===o[0]?' selected':'')+'>'+esc(o[1])+'</option>'; }).join('')
+        + '</select>'
+        + '<div class="eyebrow" style="margin:16px 0 6px">Typical ground conditions where you play</div>'
+        + '<select class="sel" onchange="setA(\'ground\',this.value)">'
+        + '<option value="" disabled'+(a.ground?'':' selected')+'>Choose...</option>'
+        + grOpts.map(function(o){ return '<option value="'+o[0]+'"'+(a.ground===o[0]?' selected':'')+'>'+esc(o[1])+'</option>'; }).join('')
+        + '</select>';
     } else if (q.kind==='ballcombo'){
       var a=state.a;
       var bbOpts=BALL_BRANDS.map(function(b){return [b,b];}).concat([['other','Other / not listed']]);
@@ -949,6 +1026,7 @@ function render(){
       canNext = (!needH || Boolean(state.a.prefHead)) && (!needS || Boolean(state.a.prefShaft));
     }
     if (q.kind==='speedcombo') canNext = true;
+    if (q.kind==='wedgecombo') canNext = Boolean(state.a.delivery) && Boolean(state.a.ground);
     if (q.kind==='ballcombo') canNext = Boolean(state.a.currentBallBrand) && (state.a.currentBallBrand==='other' || Boolean(state.a.currentBall));
     if (q.kind==='likecombo') canNext = Boolean(state.a.likePart) && Boolean(state.a.flight);
     if (q.kind==='ballflight') canNext = Boolean(state.a.currentFlight) && Boolean(state.a.flightPref) && Boolean(state.a.spinStruggle);
@@ -1009,6 +1087,10 @@ function bookFitting(){ alert('Fitting bookings are coming soon - for now, ask i
     state={cat:'driver',step:0,done:true,a:{dexterity:'R',speed:'100',spin:'2750',currentBrand:'other',currentModel:'other',currentShaftBrand:'Fujikura',currentShaftModel:'Ventus Blue',likePart:'head',prefShaft:'Project X HZRDUS Black',miss:'slice',flight:'mid'}};
   } else if (h==='#results-ball'){
     state={cat:'ball',step:0,done:true,a:{currentBall:'Pro V1',currentFlight:'mid',flightPref:'lower',spinStruggle:'much',area:'tee',feel:'soft',ballBrand:'any'}};
+  } else if (h==='#results-wedge'){
+    state={cat:'wedge',step:0,done:true,a:{pwLoft:'46',delivery:'steep',ground:'soft',struggle:'bunkers',face:'square',wedgeBrand:'any'}};
+  } else if (h==='#results-wedge-brand'){
+    state={cat:'wedge',step:0,done:true,a:{pwLoft:'45',delivery:'shallow',ground:'firm',struggle:'flop',face:'open',wedgeBrand:'Titleist'}};
   } else if (h==='#results-ball-brand'){
     state={cat:'ball',step:0,done:true,a:{currentBallBrand:'Titleist',currentBall:'Pro V1',currentFlight:'mid',flightPref:'happy',spinStruggle:'happy',area:'short',feel:'dontmind',ballBrand:'Srixon'}};
   } else if (h==='#results-irons'){
@@ -1021,4 +1103,4 @@ function bookFitting(){ alert('Fitting bookings are coming soon - for now, ask i
 </html>
 
 
-<!-- build v32 -->
+<!-- build v37 -->
