@@ -42,6 +42,7 @@
   input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 28px; height: 28px; border-radius: 50%; background: var(--teal); border: 3px solid #fff; box-shadow: 0 1px 5px rgba(0,0,0,.35); cursor: pointer; }
   input[type=range]::-moz-range-thumb { width: 22px; height: 22px; border-radius: 50%; background: var(--teal); border: 3px solid #fff; box-shadow: 0 1px 5px rgba(0,0,0,.35); cursor: pointer; }
   .slider-labels { display: flex; justify-content: space-between; font-size: 14px; color: var(--ink2); margin-top: 12px; }
+  .slider-labels span { cursor: pointer; padding: 10px 12px; }
   .slider-labels .on { color: var(--ink); font-weight: 700; }
   .navrow { margin-top: auto; display: flex; gap: 8px; align-items: center; padding-top: 24px; }
   .nav-back { background: none; border: none; color: var(--ink2); font-size: 15px; font-weight: 600; cursor: pointer; padding: 12px 10px; min-height: 48px; white-space: nowrap; }
@@ -96,6 +97,11 @@ var STOCK = [
   {id:'d12',brand:'Mizuno',model:'JPX ONE Select Driver',year:2026,cat:'driver',dex:['R','L'],flex:['Regular','Stiff','X-Stiff'],bias:'neutral',style:'players',loft:'standard',weight:'standard',flight:'mid',spec:'8.5\u00B0 / 9.5\u00B0 / 10.5\u00B0 (unverified)',price:529},
   {id:'d13',brand:'Srixon',model:'ZXi RKT Driver',year:2026,cat:'driver',dex:['R','L'],flex:['Regular','Stiff','X-Stiff'],bias:'neutral',style:'players',loft:'standard',weight:'standard',flight:'mid',spec:'9.5\u00B0 / 10.5\u00B0 (unverified)',price:569},
   {id:'d14',brand:'Cobra',model:'DS-Adapt Max-K Driver',year:2024,cat:'driver',dex:['R','L'],flex:['Regular','Stiff'],bias:'draw',style:'gi',loft:'higher',weight:'standard',flight:'high',spec:'9\u00B0 / 10.5\u00B0 / 12\u00B0, high MOI',price:469},
+ {id:'d15',brand:'Titleist',model:'GTS4 Driver',year:2026,cat:'driver',dex:['R','L'],flex:['Stiff','X-Stiff'],bias:'fade',style:'players',loft:'lower',weight:'standard',flight:'low',spec:'8\u00B0 / 9\u00B0 / 10\u00B0, lowest spin in the GTS lineup',price:629},
+ {id:'d16',brand:'Callaway',model:'Quantum Max D Driver',year:2026,cat:'driver',dex:['R','L'],flex:['Regular','Stiff','X-Stiff'],bias:'draw',style:'gi',loft:'higher',weight:'standard',flight:'high',spec:'9\u00B0 / 10.5\u00B0 / 12\u00B0, draw bias (unverified)',price:599},
+ {id:'d17',brand:'Callaway',model:'Quantum Max Fast Driver',year:2026,cat:'driver',dex:['R','L'],flex:['Senior','Regular'],bias:'draw',style:'gi',loft:'higher',weight:'light',flight:'high',spec:'10.5\u00B0 / 12\u00B0, lightweight (unverified)',price:599},
+ {id:'d18',brand:'Ping',model:'G440 MAX Driver',year:2026,cat:'driver',dex:['R','L'],flex:['Senior','Regular','Stiff','X-Stiff'],bias:'neutral',style:'gi',loft:'higher',weight:'standard',flight:'high',spec:'9\u00B0 / 10.5\u00B0 / 12\u00B0, high MOI (unverified)',price:575},
+ {id:'d19',brand:'Ping',model:'G440 LST Driver',year:2026,cat:'driver',dex:['R','L'],flex:['Stiff','X-Stiff'],bias:'fade',style:'players',loft:'lower',weight:'standard',flight:'low',spec:'8\u00B0 / 9\u00B0 / 10.5\u00B0, low spin (unverified)',price:575},
   {id:'i1',brand:'TaylorMade',model:'P790 Irons (2025)',year:2025,cat:'irons',dex:['R','L'],flex:['Regular','Stiff','X-Stiff'],bias:'neutral',style:'players',loft:'standard',weight:'standard',flight:'mid',spec:'4-PW + AW, players distance',price:1074},
   {id:'i2',brand:'Callaway',model:'Elyte Irons',year:2025,cat:'irons',dex:['R','L'],flex:['Regular','Stiff'],bias:'neutral',style:'gi',loft:'higher',weight:'standard',flight:'high',spec:'5-PW, game improvement',price:1002},
   {id:'i3',brand:'Titleist',model:'T150 Irons (2025)',year:2025,cat:'irons',dex:['R','L'],flex:['Regular','Stiff'],bias:'neutral',style:'players',loft:'standard',weight:'standard',flight:'mid',spec:'4-PW, players distance',price:1369},
@@ -226,29 +232,29 @@ function buildQuestions(cat, a){
   var brandOpts = BRANDS.filter(function(b){return b!=='Any';}).map(function(b){return [b,b];});
   brandOpts.push(['other','Other / not listed']);
   var qs = cat==='driver' ? [
-    {id:'dexterity',label:'Do you play left or right handed?',help:'Heads are built right or left-handed, so this filters out anything you cannot use.',opts:[['R','Right-handed'],['L','Left-handed']]},
-    {id:'speed',label:'What is your club head speed?',help:'Your driver swing speed. Choose Not sure if you do not know it.',opts:[['80','Under 85 mph'],['90','85-95 mph'],['100','95-105 mph'],['107','105-110 mph'],['112','110-115 mph'],['117','115-120 mph'],['125','120+ mph'],['unsure','Not sure']]},
-    {id:'spin',label:'What is your driver spin rate?',help:'Optional - sharing it makes the suggestion more accurate.',opts:[['1900','Under 2,000 rpm'],['2350','2,000-2,700 rpm'],['2850','Over 2,700 rpm'],['skip','Skip / not sure']]},
-    {id:'currentBrand',label:'What is your current driver brand?',help:'This shows us what you are playing now, so we can compare like for like.',opts:brandOpts},
-    {id:'currentModel',label:'Which model is it?',help:'From the demo stock list - choose Other if yours is not there.',opts:(a.currentBrand && a.currentBrand!=='other') ? modelsFor('driver',a.currentBrand).concat([['other','Other / not listed']]) : [['other','Other / not listed']]},
-    {id:'currentShaftBrand',label:'What shaft brand is in your current driver?',kind:'dropdown',help:'The shaft in your current driver.',opts:SHAFT_BRANDS.map(function(b){return [b,b];}).concat([['other','Other / not listed'],['unsure','Not sure']])},
-    {id:'currentShaftModel',label:'Which shaft model is it?',kind:'dropdown',help:'From the shaft list - choose Other if yours is not there.',opts:(a.currentShaftBrand && a.currentShaftBrand!=='other' && a.currentShaftBrand!=='unsure') ? shaftModelsFor(a.currentShaftBrand).concat([['other','Other / not listed']]) : [['other','Other / not listed'],['unsure','Not sure']]},
-    {id:'likePart',label:'Anything you like about your current set up?',help:'If you love one part, we only suggest the other.',opts:[['head','The head'],['shaft','The shaft'],['both','Both'],['neither','Neither / not sure']]},
-    {id:'brand',label:'Do you have a preferred brand?',help:'Some golfers like to stay with a brand they trust. Choose Any for the widest choice.',opts:BRANDS.map(function(b){return [b,b];})},
+    {id:'dexterity',kind:'dropdown',label:'Do you play left or right handed?',help:'Heads are built right or left-handed, so this filters out anything you cannot use.',opts:[['R','Right-handed'],['L','Left-handed']]},
+    {id:'speed',kind:'dropdown',label:'What is your club head speed?',help:'Your driver swing speed. Choose Not sure if you do not know it.',opts:[['80','Under 85 mph'],['90','85-95 mph'],['100','95-105 mph'],['107','105-110 mph'],['112','110-115 mph'],['117','115-120 mph'],['125','120+ mph'],['unsure','Not sure']]},
+    {id:'spin',kind:'dropdown',label:'What is your driver spin rate?',help:'Optional - sharing it makes the suggestion more accurate.',opts:[['1900','Under 2,000 rpm'],['2350','2,000-2,700 rpm'],['2850','Over 2,700 rpm'],['skip','Skip / not sure']]},
+    {id:'currentBrand',kind:'dropdown',label:'What is your current driver brand?',help:'This shows us what you are playing now, so we can compare like for like.',opts:brandOpts},
+    {id:'currentModel',kind:'dropdown',label:'Which model is it?',help:'From the demo stock list - choose Other if yours is not there.',opts:(a.currentBrand && a.currentBrand!=='other') ? modelsFor('driver',a.currentBrand).concat([['other','Other / not listed']]) : [['other','Other / not listed']]},
+    {id:'currentShaftBrand',kind:'dropdown',label:'What shaft brand is in your current driver?',kind:'dropdown',help:'The shaft in your current driver.',opts:SHAFT_BRANDS.map(function(b){return [b,b];}).concat([['other','Other / not listed'],['unsure','Not sure']])},
+    {id:'currentShaftModel',kind:'dropdown',label:'Which shaft model is it?',kind:'dropdown',help:'From the shaft list - choose Other if yours is not there.',opts:(a.currentShaftBrand && a.currentShaftBrand!=='other' && a.currentShaftBrand!=='unsure') ? shaftModelsFor(a.currentShaftBrand).concat([['other','Other / not listed']]) : [['other','Other / not listed'],['unsure','Not sure']]},
+    {id:'likePart',kind:'dropdown',label:'Anything you like about your current set up?',help:'If you love one part, we only suggest the other.',opts:[['head','The head'],['shaft','The shaft'],['both','Both'],['neither','Neither / not sure']]},
+    {id:'brand',kind:'dropdown',label:'Do you have a preferred brand?',help:'Some golfers like to stay with a brand they trust. Choose Any for the widest choice.',opts:BRANDS.map(function(b){return [b,b];})},
     
-    {id:'miss',label:'What is your current miss?',help:'This drives the recommendation: we pick features that fight your miss.',opts:[['hook','Hook'],['low','Too low launching'],['high','Too high launching'],['slice','Slice'],['straight','Happy with my current ball flight']]},
-    {id:'flight',label:'What ball flight do you prefer?',help:'Your preferred trajectory tunes the loft and launch of the picks.',opts:[['low','Low'],['mid','Mid'],['high','High']]}
+    {id:'miss',kind:'dropdown',label:'What is your current miss?',help:'This drives the recommendation: we pick features that fight your miss.',opts:[['hook','Hook'],['low','Too low launching'],['high','Too high launching'],['slice','Slice'],['straight','Happy with my current ball flight']]},
+    {id:'flight',kind:'dropdown',label:'What ball flight do you prefer?',help:'Your preferred trajectory tunes the loft and launch of the picks.',opts:[['low','Low'],['mid','Mid'],['high','High']]}
   ] : [
-    {id:'dexterity',label:'Do you play left or right handed?',help:'Heads are built right or left-handed, so this filters out anything you cannot use.',opts:[['R','Right-handed'],['L','Left-handed']]},
-    {id:'speed',label:'What is your club head speed with a 7-iron?',help:'Your swing speed with a 7-iron. Choose Not sure if you do not know it.',opts:[['60','Under 65 mph'],['70','65-75 mph'],['80','75-85 mph'],['90','Over 85 mph'],['unsure','Not sure']]},
-    {id:'spin',label:'What is your 7-iron spin rate?',help:'Optional - sharing it makes the suggestion more accurate.',opts:[['4500','Under 5,000 rpm'],['5500','5,000-6,000 rpm'],['6500','6,000-7,000 rpm'],['7500','Over 7,000 rpm'],['skip','Skip / not sure']]},
-    {id:'currentBrand',label:'What is your current iron brand?',help:'This shows us what you are playing now, so we can compare like for like.',opts:brandOpts},
-    {id:'currentModel',label:'Which model is it?',help:'From the demo stock list - choose Other if yours is not there.',opts:(a.currentBrand && a.currentBrand!=='other') ? modelsFor('irons',a.currentBrand).concat([['other','Other / not listed']]) : [['other','Other / not listed']]},
-    {id:'likePart',label:'Anything you like about your current set up?',help:'If you love one part, we only suggest the other.',opts:[['head','The heads'],['shaft','The shafts'],['both','Both'],['neither','Neither / not sure']]},
-    {id:'brand',label:'Do you have a preferred brand?',help:'Some golfers like to stay with a brand they trust. Choose Any for the widest choice.',opts:BRANDS.map(function(b){return [b,b];})},
+    {id:'dexterity',kind:'dropdown',label:'Do you play left or right handed?',help:'Heads are built right or left-handed, so this filters out anything you cannot use.',opts:[['R','Right-handed'],['L','Left-handed']]},
+    {id:'speed',kind:'dropdown',label:'What is your club head speed with a 7-iron?',help:'Your swing speed with a 7-iron. Choose Not sure if you do not know it.',opts:[['60','Under 65 mph'],['70','65-75 mph'],['80','75-85 mph'],['90','Over 85 mph'],['unsure','Not sure']]},
+    {id:'spin',kind:'dropdown',label:'What is your 7-iron spin rate?',help:'Optional - sharing it makes the suggestion more accurate.',opts:[['4500','Under 5,000 rpm'],['5500','5,000-6,000 rpm'],['6500','6,000-7,000 rpm'],['7500','Over 7,000 rpm'],['skip','Skip / not sure']]},
+    {id:'currentBrand',kind:'dropdown',label:'What is your current iron brand?',help:'This shows us what you are playing now, so we can compare like for like.',opts:brandOpts},
+    {id:'currentModel',kind:'dropdown',label:'Which model is it?',help:'From the demo stock list - choose Other if yours is not there.',opts:(a.currentBrand && a.currentBrand!=='other') ? modelsFor('irons',a.currentBrand).concat([['other','Other / not listed']]) : [['other','Other / not listed']]},
+    {id:'likePart',kind:'dropdown',label:'Anything you like about your current set up?',help:'If you love one part, we only suggest the other.',opts:[['head','The heads'],['shaft','The shafts'],['both','Both'],['neither','Neither / not sure']]},
+    {id:'brand',kind:'dropdown',label:'Do you have a preferred brand?',help:'Some golfers like to stay with a brand they trust. Choose Any for the widest choice.',opts:BRANDS.map(function(b){return [b,b];})},
     
-    {id:'miss',label:'What is your current miss?',help:'This drives the recommendation: we pick features that fight your miss.',opts:[['thin','Thin'],['fat','Fat / heavy'],['slice','Slice'],['hook','Hook'],['high','Too high'],['low','Too low'],['straight','Fairly straight']]},
-    {id:'flight',label:'What ball flight do you want?',help:'Your preferred trajectory tunes the loft and launch of the picks.',opts:[['low','Lower'],['mid','Mid'],['high','Higher']]}
+    {id:'miss',kind:'dropdown',label:'What is your current miss?',help:'This drives the recommendation: we pick features that fight your miss.',opts:[['thin','Thin'],['fat','Fat / heavy'],['slice','Slice'],['hook','Hook'],['high','Too high'],['low','Too low'],['straight','Fairly straight']]},
+    {id:'flight',kind:'dropdown',label:'What ball flight do you want?',help:'Your preferred trajectory tunes the loft and launch of the picks.',opts:[['low','Lower'],['mid','Mid'],['high','Higher']]}
   ];
   // Driver flow: once the shaft model is known, ask weight then flex as dropdowns (Egor: shaft section = dropdowns brand > model > weight > flex)
   if (cat==='driver' && a.currentShaftModel && a.currentShaftModel!=='other' && a.currentShaftModel!=='unsure'){
@@ -259,14 +265,12 @@ function buildQuestions(cat, a){
       var flexes=wf ? wf[1] : Array.from(new Set(sh.wts.reduce(function(acc,w){return acc.concat(w[1]);},[])));
       var at=qs.findIndex(function(q){return q.id==='likePart';});
       qs.splice(at<0?qs.length:at, 0,
-        {id:'currentShaftWeight',label:'Which weight is it?',kind:'dropdown',help:'Printed on the shaft - a Ventus Blue 6 is roughly 65g.',opts:wopts},
-        {id:'currentShaftFlex',label:'Which flex is it?',kind:'dropdown',help:'Printed on the shaft next to the weight.',opts:flexes.map(function(f){return [f,f];}).concat([['unsure','Not sure']])});
+        {id:'currentShaftWeight',kind:'dropdown',label:'Which weight is it?',help:'Printed on the shaft - a Ventus Blue 6 is roughly 65g.',opts:wopts},
+        {id:'currentShaftFlex',kind:'dropdown',label:'Which flex is it?',help:'Printed on the shaft next to the weight.',opts:flexes.map(function(f){return [f,f];}).concat([['unsure','Not sure']])});
     }
   }
   return qs;
 }
-// Prototype addition Egor has not yet confirmed: a budget question.
-var BUDGET_Q = {id:'budget',label:'What is your budget?',help:'Added for this demo - remove or reword as you like.',opts:[['500','Under \u00A3500'],['800','\u00A3500-800'],['1100','\u00A3800-1,100'],['99999','\u00A31,100+'],['none','No set budget']]};
 
 var state = {cat:null, step:0, a:{}, done:false};
 
@@ -374,7 +378,7 @@ function sliderPreview(inp){
   spans.forEach(function(s,j){ s.className = j===i ? 'on' : ''; });
 }
 function setSlider(id, v){
-  var qs = buildQuestions(state.cat, state.a).concat([BUDGET_Q]);
+  var qs = buildQuestions(state.cat, state.a);
   var q = qs[state.step];
   if (q && q.opts[Number(v)]) state.a[id] = q.opts[Number(v)][0];
   render();
@@ -399,19 +403,24 @@ function render(){
   } else if (state.done){
     var cat=state.cat, a=state.a;
     var mode = a.likePart==='head' ? 'shaft' : (a.likePart==='shaft' ? 'head' : 'club');
+    var likesBoth = a.likePart==='both';
     var shaftCat = cat==='driver' ? 'wood' : 'iron';
     var titles = {club: cat==='driver'?'Your driver matches':'Your iron matches',
+                  both: cat==='driver'?'Good news - your driver suits you':'Good news - your irons suit you',
                   shaft: cat==='driver'?'Your shaft matches':'Your iron shaft matches',
                   head: cat==='driver'?'Your head matches':'Your iron head matches'};
     var intros = {club: 'Three picks from this shop\u2019s stock at different prices, each chosen to fight your miss.',
+                  both: 'You like both your current head and shaft, so your current set up is great for you. No change needed - but if you fancy trying something new, here are options worth a look, each chosen to fight your miss.',
                   shaft: 'Keeping your current head. Three shaft options at different prices, each chosen to fight your miss.',
                   head: 'Keeping your current shaftSHAFTNAME. Three head options at different prices, each chosen to fight your miss.'};
     var shaftDetail = (a.currentShaftWeight && a.currentShaftWeight!=='unsure' ? ' '+a.currentShaftWeight : '') + (a.currentShaftFlex && a.currentShaftFlex!=='unsure' ? ', '+a.currentShaftFlex+' flex' : '');
     var knownShaft = a.currentShaftModel && a.currentShaftModel!=='other' && a.currentShaftModel!=='unsure' ? ' ('+a.currentShaftModel+shaftDetail+')' : '';
     intros.head = intros.head.replace('SHAFTNAME', knownShaft);
     h = '<div class="results"><div class="eyebrow">Your results</div>'
-      + '<h1 class="res">'+titles[mode]+'</h1>'
-      + '<p class="res-intro">'+intros[mode]+'</p>';
+      + '<h1 class="res">'+(likesBoth?titles.both:titles[mode])+'</h1>'
+      + '<p class="res-intro">'+(likesBoth?intros.both:intros[mode])+'</p>'
+      + (likesBoth && a.currentBrand && a.currentBrand!=='other' && a.currentModel && a.currentModel!=='other'
+          ? '<div class="callout note"><span class="t">Keeping your '+esc(a.currentBrand+' '+a.currentModel)+'</span>You said you like it, and nothing here beats a club you already get on with. The picks below are only for trying something different.</div>' : '');
     if (mode==='shaft'){
       var pool2=SHAFTS.filter(function(c){return c.cat===shaftCat && c.price!==null;});
       var sc2=pool2.map(function(c){return {c:c,s:scoreShaft(c,a,cat)};});
@@ -458,8 +467,6 @@ function render(){
       }
       var b=claimTier(0), m=claimTier(1), p=claimTier(2);
       var rows=[['Best value',b],['Mid-range',m],['Step-up pick',p]].filter(function(r){return r[1];});
-      if (a.budget && a.budget!=='none' && b && b.c.price>Number(a.budget))
-        h += '<div class="callout note"><span class="t">Budget note</span>Nothing in the demo stock fits that budget, so the closest matches are shown and some are over it.</div>';
       if (rows.length){
         var lead2=rows[0][1];
         h += '<div class="res-hero"><span class="tier">Best value - our recommendation</span>'
@@ -520,7 +527,7 @@ function render(){
       + '<div class="navrow"><button class="nav-back" onclick="back()">\u2039 Back</button><button class="nav-next" onclick="restart()">Start again</button></div>'
       + '<div class="closing">Iron, wedge, putter and golf ball selectors are in development. Prototype for shop demos. No purchase or reservation happens here.</div></div>';
   } else {
-    var qs=buildQuestions(state.cat, state.a).concat([BUDGET_Q]);
+    var qs=buildQuestions(state.cat, state.a);
     var q=qs[state.step], val=state.a[q.id];
     h = '<div class="qpage"><div class="progress"><div class="fill" style="width:'+Math.round(((state.step+1)/qs.length)*100)+'%"></div></div>'
       + '<div class="eyebrow">Question '+(state.step+1)+' of '+qs.length+'</div>'
@@ -537,7 +544,7 @@ function render(){
       stops.forEach(function(o,i){ if (val===o[0]) idx=i; });
       h += '<div class="slider-wrap">'
         + '<input type="range" min="0" max="'+(stops.length-1)+'" step="1" value="'+(idx<0?1:idx)+'" oninput="sliderPreview(this)" onchange="setSlider(\''+q.id+'\',this.value)" aria-label="'+esc(q.label)+'">'
-        + '<div class="slider-labels">'+stops.map(function(o,i){ return '<span class="'+(idx===i?'on':'')+'">'+esc(o[1])+'</span>'; }).join('')+'</div>'
+        + '<div class="slider-labels">'+stops.map(function(o,i){ return '<span class="'+(idx===i?'on':'')+'" onclick="setSlider(\''+q.id+'\','+i+')" role="button">'+esc(o[1])+'</span>'; }).join('')+'</div>'
         + (idx<0?'<div class="cap">Slide to choose</div>':'')+'</div>';
     } else {
       h += '<div class="opts">';
@@ -563,7 +570,7 @@ function back(){
   render(); window.scrollTo(0,0);
 }
 function next(){
-  var qs=buildQuestions(state.cat, state.a).concat([BUDGET_Q]);
+  var qs=buildQuestions(state.cat, state.a);
   if (state.step===qs.length-1) { state.done=true; }
   else {
     state.step++;
@@ -581,13 +588,13 @@ function restart(){ state={cat:null,step:0,a:{},done:false}; render(); window.sc
     var parts=h.slice(3).split(','); state.cat=parts[0]; state.step=Number(parts[1]||0);
     for (var i=2;i<parts.length;i++){ var kv=parts[i].split('='); state.a[kv[0]]=decodeURIComponent(kv.slice(1).join('=')); }
   } else if (h==='#results-driver'){
-    state={cat:'driver',step:0,done:true,a:{dexterity:'R',speed:'90',spin:'1900',currentBrand:'other',currentModel:'other',likePart:'both',brand:'Any',miss:'low',flight:'high',budget:'none'}};
+    state={cat:'driver',step:0,done:true,a:{dexterity:'R',speed:'90',spin:'1900',currentBrand:'other',currentModel:'other',likePart:'both',brand:'Any',miss:'low',flight:'high'}};
   } else if (h==='#results-shafts'){
-    state={cat:'driver',step:0,done:true,a:{dexterity:'R',speed:'90',spin:'2850',currentBrand:'TaylorMade',currentModel:'Qi4D Driver',likePart:'head',brand:'Any',miss:'slice',flight:'mid',budget:'none'}};
+    state={cat:'driver',step:0,done:true,a:{dexterity:'R',speed:'90',spin:'2850',currentBrand:'TaylorMade',currentModel:'Qi4D Driver',likePart:'head',brand:'Any',miss:'slice',flight:'mid'}};
   } else if (h==='#results-heads'){
-    state={cat:'driver',step:0,done:true,a:{dexterity:'R',speed:'100',spin:'skip',currentBrand:'Ping',currentModel:'other',currentShaftBrand:'Fujikura',currentShaftModel:'Ventus Blue',currentShaftWeight:'60g',currentShaftFlex:'S',likePart:'shaft',brand:'Any',miss:'slice',flight:'mid',budget:'none'}};
+    state={cat:'driver',step:0,done:true,a:{dexterity:'R',speed:'100',spin:'skip',currentBrand:'Ping',currentModel:'other',currentShaftBrand:'Fujikura',currentShaftModel:'Ventus Blue',currentShaftWeight:'60g',currentShaftFlex:'S',likePart:'shaft',brand:'Any',miss:'slice',flight:'mid'}};
   } else if (h==='#results-irons'){
-    state={cat:'irons',step:0,done:true,a:{dexterity:'R',speed:'70',spin:'skip',currentBrand:'other',currentModel:'other',likePart:'both',brand:'Any',miss:'fat',flight:'high',budget:'800'}};
+    state={cat:'irons',step:0,done:true,a:{dexterity:'R',speed:'70',spin:'skip',currentBrand:'other',currentModel:'other',likePart:'both',brand:'Any',miss:'fat',flight:'high'}};
   }
   render();
 })();
