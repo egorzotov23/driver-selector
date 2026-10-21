@@ -356,7 +356,7 @@ function buildQuestions(cat, a){
   var brandOpts = BRANDS.filter(function(b){return b!=='Any';}).map(function(b){return [b,b];});
   brandOpts.push(['other','Other / not listed']);
   var qs = cat==='ball' ? [
-    {id:'currentBall',kind:'dropdown',label:'What ball do you play at the moment?',help:'So we can compare like for like and avoid suggesting the ball you already play. Choose Something else if yours is not listed.',opts:BALLS.map(function(b){return [b.model, b.brand+' '+b.model];}).concat([['other','Something else / not sure']])},
+    {id:'currentBall',kind:'ballcombo',label:'What ball do you play at the moment?',help:'So we can compare like for like and avoid suggesting the ball you already play. Choose Other if yours is not listed.',opts:[]},
     {id:'ballflight',kind:'ballflight',label:'How is your ball flight?',help:'Three quick picks about your flight and spin - they tune which ball characteristics we look for.',opts:[]},
     {id:'area',kind:'dropdown',label:'Where could a ball change help you most?',help:'Different parts of the game want different things from a ball - distance off the tee, stopping power on approach shots, or grab around the greens.',opts:[['tee','Off the tee'],['approach','Approach shots'],['short','Short game']]},
     {id:'feel',kind:'dropdown',label:'What feel do you prefer?',help:'Soft, firm or somewhere in between.',opts:[['soft','Soft'],['mid','Medium'],['firm','Firm'],['dontmind','Don\u2019t mind']]},
@@ -565,7 +565,7 @@ function render(){
                   both: cat==='driver'?'Good news - your driver suits you':'Good news - your irons suit you',
                   shaft: cat==='driver'?'Your shaft matches':'Your iron shaft matches',
                   head: cat==='driver'?'Your head matches':'Your iron head matches'};
-    var intros = {club: cat==='ball'?'Three balls matched to your answers, each with the reason why.':'The best match from each brand in stock, each chosen to fight your miss.',
+    var intros = {club: cat==='ball'?'Balls matched to your answers, each with the reason why.':'The best match from each brand in stock, each chosen to fight your miss.',
                   both: 'You like both your current head and shaft, so your current set up is great for you. No change needed - but if you fancy trying something new, here are options worth a look, each chosen to fight your miss.',
                   shaft: 'Keeping your current head. Three new shaft options, each chosen to fight your miss.',
                   head: 'Keeping your current shaftSHAFTNAME. The best head from each brand, each chosen to fight your miss.'};
@@ -587,7 +587,14 @@ function render(){
         if (bp.length>=3) bpool=bp;
       }
       var bs=bpool.map(function(b){return {c:b,s:scoreBall(b,a)};}).sort(function(x,y){return y.s-x.s;});
-      var brows=[['Top match',bs[0]],['Also suits you',bs[1]],['Worth a look',bs[2]]].filter(function(r){return r[1];});
+      var brows;
+      if (a.ballBrand && a.ballBrand!=='any'){
+        brows=[['Top match',bs[0]],['Also suits you',bs[1]],['Worth a look',bs[2]]].filter(function(r){return r[1];});
+      } else {
+        var bSeen={}, bBest=[];
+        bs.forEach(function(r){ if (!bSeen[r.c.brand]){ bSeen[r.c.brand]=1; bBest.push(r); } });
+        brows=bBest.map(function(r,i){ return [i===0?'Top match':'Best '+r.c.brand, r]; });
+      }
       if (brows.length){
         var blead=brows[0][1];
         h += '<div class="res-hero"><span class="tier">'+brows[0][0]+' - our recommendation</span>'
@@ -874,6 +881,24 @@ function render(){
           + '<div class="cap">Good spin at your speed: roughly '+fmtN(swin[0])+'-'+fmtN(swin[1])+' rpm.</div>';
       }
       h += '<div class="cap" style="margin-top:16px">If you know your averages it can help with the decision - feel free to skip if you do not.</div>';
+    } else if (q.kind==='ballcombo'){
+      var a=state.a;
+      var bbOpts=BALL_BRANDS.map(function(b){return [b,b];}).concat([['other','Other / not listed']]);
+      h += '<div class="eyebrow" style="margin:2px 0 6px">Brand</div>'
+        + '<select class="sel" onchange="setA(\'currentBallBrand\',this.value)">'
+        + '<option value="" disabled'+(a.currentBallBrand?'':' selected')+'>Choose...</option>'
+        + bbOpts.map(function(o){ return '<option value="'+o[0]+'"'+(a.currentBallBrand===o[0]?' selected':'')+'>'+esc(o[1])+'</option>'; }).join('')
+        + '</select>';
+      if (a.currentBallBrand && a.currentBallBrand!=='other'){
+        var bModels=BALLS.filter(function(b){return b.brand===a.currentBallBrand;});
+        h += '<div class="eyebrow" style="margin:16px 0 6px">Model</div>'
+          + '<select class="sel" onchange="setA(\'currentBall\',this.value)">'
+          + '<option value="" disabled'+(a.currentBall?'':' selected')+'>Choose...</option>'
+          + bModels.map(function(b){ return '<option value="'+esc(b.model)+'"'+(a.currentBall===b.model?' selected':'')+'>'+esc(b.model)+'</option>'; }).join('')
+          + '</select>';
+      } else if (a.currentBallBrand==='other'){
+        h += '<div class="cap">No problem - we will allow for that in your matches.</div>';
+      }
     } else if (q.kind==='ballflight'){
       var a=state.a;
       var bfRows=[['What is your current ball flight?','currentFlight',[['low','Low'],['mid','Mid'],['high','High']]],
@@ -911,6 +936,7 @@ function render(){
       canNext = (!needH || Boolean(state.a.prefHead)) && (!needS || Boolean(state.a.prefShaft));
     }
     if (q.kind==='speedcombo') canNext = true;
+    if (q.kind==='ballcombo') canNext = Boolean(state.a.currentBallBrand) && (state.a.currentBallBrand==='other' || Boolean(state.a.currentBall));
     if (q.kind==='likecombo') canNext = Boolean(state.a.likePart) && Boolean(state.a.flight);
     if (q.kind==='ballflight') canNext = Boolean(state.a.currentFlight) && Boolean(state.a.flightPref) && Boolean(state.a.spinStruggle);
     if (q.kind==='shaftcombo') canNext = Boolean(state.a.currentShaftBrand) && (state.a.currentShaftBrand==='other' || state.a.currentShaftBrand==='unsure' || Boolean(state.a.currentShaftModel));
