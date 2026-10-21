@@ -609,6 +609,19 @@ function render(){
             + '<div class="detail">'+esc(ballReason(r[1].c,a))+'</div></div></div>';
         });
       }
+      if (a.ballBrand && a.ballBrand!=='any'){
+        var oSeen={}, otherBest=[];
+        BALLS.filter(function(b){return b.model!==a.currentBall && b.brand!==a.ballBrand;})
+          .map(function(b){return {c:b,s:scoreBall(b,a)};}).sort(function(x,y){return y.s-x.s;})
+          .forEach(function(r){ if (!oSeen[r.c.brand]){ oSeen[r.c.brand]=1; otherBest.push(r); } });
+        if (otherBest.length){
+          h += '<h2 class="also">One from every other brand</h2>';
+          otherBest.forEach(function(r){
+            h += '<div class="opt"><div><div class="tiername">Best '+esc(r.c.brand)+'</div><div class="name">'+esc(r.c.brand+' '+r.c.model)+'</div>'
+              + '<div class="detail">'+esc(ballReason(r.c,a))+'</div></div></div>';
+          });
+        }
+      }
       h += '<div class="cap">* Illustrative match score from placeholder matching logic. Ball specs unverified.</div>';
       picks=brows.map(function(r){return {tier:r[0],name:r[1].c.brand+' '+r[1].c.model,why:ballReason(r[1].c,a)};});
     } else if (mode==='shaft'){
@@ -996,6 +1009,8 @@ function bookFitting(){ alert('Fitting bookings are coming soon - for now, ask i
     state={cat:'driver',step:0,done:true,a:{dexterity:'R',speed:'100',spin:'2750',currentBrand:'other',currentModel:'other',currentShaftBrand:'Fujikura',currentShaftModel:'Ventus Blue',likePart:'head',prefShaft:'Project X HZRDUS Black',miss:'slice',flight:'mid'}};
   } else if (h==='#results-ball'){
     state={cat:'ball',step:0,done:true,a:{currentBall:'Pro V1',currentFlight:'mid',flightPref:'lower',spinStruggle:'much',area:'tee',feel:'soft',ballBrand:'any'}};
+  } else if (h==='#results-ball-brand'){
+    state={cat:'ball',step:0,done:true,a:{currentBallBrand:'Titleist',currentBall:'Pro V1',currentFlight:'mid',flightPref:'happy',spinStruggle:'happy',area:'short',feel:'dontmind',ballBrand:'Srixon'}};
   } else if (h==='#results-irons'){
     state={cat:'irons',step:0,done:true,a:{dexterity:'R',speed:'70',spin:'skip',currentBrand:'other',currentModel:'other',likePart:'both',miss:'fat',flight:'high'}};
   }
