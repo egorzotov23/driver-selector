@@ -436,7 +436,7 @@ function buildQuestions(cat, a){
     {id:'ballBrand',kind:'dropdown',label:'Is there a brand you are interested in trying?',help:'Choose No preference for the widest choice.',opts:[['any','No preference']].concat(BALL_BRANDS.map(function(b){return [b,b];}))}
   ] : cat==='putter' ? [
     {id:'dexterity',kind:'dropdown',label:'Do you play right or left handed?',help:'Left-hand models can be more limited - worth checking in store.',opts:[['R','Right handed'],['L','Left handed']]},
-    {id:'stroke',kind:'dropdown',label:'How does your putter swing?',help:'The arc of your stroke decides how much toe hang you need - this is the single biggest fitting factor.',opts:[['straight','Straight back and straight through'],['slight','A slight arc'],['strong','A strong arc'],['unsure','Not sure']]},
+    {id:'stroke',kind:'dropdown',label:'What is your preferred arc?',help:'The arc of your stroke decides how much toe hang you need - this is the single biggest fitting factor.',opts:[['straight','Straight Back Straight Through'],['slight','Slight Arc (12-15 degree)'],['strong','Strong Arc (More than 15 degree)'],['unsure','Not sure']]},
     {id:'pmiss',kind:'dropdown',label:'What hurts most on the greens?',help:'This picks the head traits that counter it.',opts:[['right','I miss right'],['left','I miss left'],['short','I leave putts short'],['three','I three-putt too often'],['none','No real pattern']]},
     {id:'shape',kind:'dropdown',label:'What head shape do you like the look of?',help:'Blades are slim and traditional; mallets are bigger and more forgiving.',opts:[['any','No preference'],['blade','Blade'],['mallet','Mallet']]},
     {id:'feel',kind:'dropdown',label:'What feel do you like off the face?',help:'Inserts feel soft; milled faces feel crisper.',opts:[['any','No preference'],['soft','Soft - insert face'],['firm','Firm - milled face']]},
@@ -1172,4 +1172,4 @@ function bookFitting(){ alert('Fitting bookings are coming soon - for now, ask i
 </html>
 
 
-<!-- build v39 -->
+<!-- build v40 -->
