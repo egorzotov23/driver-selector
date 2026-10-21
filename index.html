@@ -862,8 +862,9 @@ function render(){
     if (q.kind==='ballflight') canNext = Boolean(state.a.currentFlight) && Boolean(state.a.flightPref) && Boolean(state.a.spinStruggle);
     if (q.kind==='shaftcombo') canNext = Boolean(state.a.currentShaftBrand) && (state.a.currentShaftBrand==='other' || state.a.currentShaftBrand==='unsure' || Boolean(state.a.currentShaftModel));
     var last = state.step===qs.length-1;
-    h += '<div class="navrow"><button class="nav-back" onclick="back()">\u2039 Back</button>'
-      + '<button class="nav-next" '+(canNext?'':'disabled')+' onclick="next()">'+(last?'See my matches':'Next')+'</button></div></div>';
+    h += '<div class="navrow"><button class="nav-back" onclick="back()">\u2039 Back</button>';
+    if (q.kind==='speedcombo') h += '<button class="nav-back" style="flex:1" onclick="skipSpeedSpin()">Skip this question</button>';
+    h += '<button class="nav-next" '+(canNext?'':'disabled')+' onclick="next()">'+(last?'See my matches':'Next')+'</button></div></div>';
   }
   app.innerHTML = h;
 }
@@ -892,6 +893,7 @@ function next(){
   }
   render(); window.scrollTo(0,0);
 }
+function skipSpeedSpin(){ setA('speed','unsure'); setA('spin','skip'); next(); }
 function restart(){ state={cat:null,step:0,a:{},done:false}; render(); window.scrollTo(0,0); }
 function bookFitting(){ alert('Fitting bookings are coming soon - for now, ask in store and we will book you in.'); }
 
