@@ -352,6 +352,41 @@ function wedgeReason(w, a){
   parts.push(w.note);
   return parts.join('; ')+'.';
 }
+// Current 2026 putter lineups - models verified from press/retail sources, unverified, Egor to confirm.
+var PUTTER_BRANDS = ['Titleist','TaylorMade','Callaway','Ping','Cobra','Cleveland','Mizuno'];
+var PUTTERS = [
+  {brand:'Titleist',maker:'Scotty Cameron',blade:'Studio Style Newport 2',mallet:'Phantom 11',note:'The milled tour standard'},
+  {brand:'TaylorMade',blade:'TP Juno',mallet:'Spider Tour X',note:'Spider Tour X - the most-played mallet on tour'},
+  {brand:'Callaway',maker:'Odyssey',blade:'Ai-ONE #1',mallet:'Ai-ONE Rossie',note:'Soft insert feel, huge range'},
+  {brand:'Ping',blade:'Scottsdale Anser',mallet:'DS72',note:'Fit-for-stroke fitting pioneers'},
+  {brand:'Cobra',blade:'King Vintage',mallet:'3D Printed Agera',note:'Strong value, 3D-printed tech'},
+  {brand:'Cleveland',blade:'HB Soft 2',mallet:'Frontline Elite',note:'Great value and alignment help'},
+  {brand:'Mizuno',blade:'M.Craft Osaka',mallet:'M.Craft Omoi',note:'Forged feel'}
+];
+function putterType(a){
+  var arc = a.stroke==='strong' ? 'high' : a.stroke==='slight' ? 'mid' : a.stroke==='straight' ? 'low' : 'low';
+  var shape = (a.shape && a.shape!=='any') ? a.shape : (arc==='low' ? 'mallet' : arc==='high' ? 'blade' : 'mallet');
+  if ((a.pmiss==='short' || a.pmiss==='three') && (!a.shape || a.shape==='any')) shape='mallet';
+  var balance = arc==='low' ? 'face-balanced' : arc==='high' ? 'toe-hang' : 'low toe-hang';
+  return {shape:shape, balance:balance, arc:arc};
+}
+function putterReason(p, a){
+  var parts=[];
+  var pt=putterType(a);
+  if (a.stroke==='straight') parts.push('straight stroke - a '+pt.balance+' head stays square');
+  if (a.stroke==='slight') parts.push('slight arc - '+pt.balance+' matches the rotation');
+  if (a.stroke==='strong') parts.push('strong arc - '+pt.balance+' lets the toe release');
+  if (!a.stroke || a.stroke==='unsure') parts.push('a forgiving '+pt.balance+' '+pt.shape+' suits most strokes');
+  if (a.shape && a.shape!=='any') parts.push('you asked for a '+a.shape);
+  if (a.pmiss==='right') parts.push('missing right - a touch more toe hang helps the face close');
+  if (a.pmiss==='left') parts.push('missing left - a squarer, more stable face helps');
+  if (a.pmiss==='short') parts.push('leaving it short - a stable mallet head helps distance control');
+  if (a.pmiss==='three') parts.push('three-putts - a forgiving high-MOI head and clear alignment line help');
+  if (a.feel==='soft') parts.push('soft insert feel as preferred');
+  if (a.feel==='firm') parts.push('crisp milled feel as preferred');
+  parts.push(p.note);
+  return parts.join('; ')+'.';
+}
 function mailtoHref(picks){
   var body='Your Equipment Selector results\n\n'+picks.map(function(p){return p.tier+': '+p.name+'\n'+p.why;}).join('\n\n')+'\n\nGeneral guidance from your answers, not a custom fitting - try them in store before you decide.';
   return 'mailto:?subject='+encodeURIComponent('My Equipment Selector results')+'&body='+encodeURIComponent(body);
@@ -399,6 +434,13 @@ function buildQuestions(cat, a){
     {id:'area',kind:'dropdown',label:'Where could a ball change help you most?',help:'Different parts of the game want different things from a ball - distance off the tee, stopping power on approach shots, or grab around the greens.',opts:[['tee','Off the tee'],['approach','Approach shots'],['short','Short game']]},
     {id:'feel',kind:'dropdown',label:'What feel do you prefer?',help:'Soft, firm or somewhere in between.',opts:[['soft','Soft'],['mid','Medium'],['firm','Firm'],['dontmind','Don\u2019t mind']]},
     {id:'ballBrand',kind:'dropdown',label:'Is there a brand you are interested in trying?',help:'Choose No preference for the widest choice.',opts:[['any','No preference']].concat(BALL_BRANDS.map(function(b){return [b,b];}))}
+  ] : cat==='putter' ? [
+    {id:'dexterity',kind:'dropdown',label:'Do you play right or left handed?',help:'Left-hand models can be more limited - worth checking in store.',opts:[['R','Right handed'],['L','Left handed']]},
+    {id:'stroke',kind:'dropdown',label:'How does your putter swing?',help:'The arc of your stroke decides how much toe hang you need - this is the single biggest fitting factor.',opts:[['straight','Straight back and straight through'],['slight','A slight arc'],['strong','A strong arc'],['unsure','Not sure']]},
+    {id:'pmiss',kind:'dropdown',label:'What hurts most on the greens?',help:'This picks the head traits that counter it.',opts:[['right','I miss right'],['left','I miss left'],['short','I leave putts short'],['three','I three-putt too often'],['none','No real pattern']]},
+    {id:'shape',kind:'dropdown',label:'What head shape do you like the look of?',help:'Blades are slim and traditional; mallets are bigger and more forgiving.',opts:[['any','No preference'],['blade','Blade'],['mallet','Mallet']]},
+    {id:'feel',kind:'dropdown',label:'What feel do you like off the face?',help:'Inserts feel soft; milled faces feel crisper.',opts:[['any','No preference'],['soft','Soft - insert face'],['firm','Firm - milled face']]},
+    {id:'putterBrand',kind:'dropdown',label:'Is there a brand you are interested in trying?',help:'Choose No preference for the widest choice.',opts:[['any','No preference']].concat(PUTTER_BRANDS.map(function(b){return [b,b];}))}
   ] : cat==='wedge' ? [
     {id:'dexterity',kind:'dropdown',label:'Do you play right or left handed?',help:'Left-hand lofts and grinds can be more limited - worth checking in store.',opts:[['R','Right handed'],['L','Left handed']]},
     {id:'pwLoft',kind:'dropdown',label:'What loft is your pitching wedge?',help:'Wedges are fitted to fill the gaps from your pitching wedge - usually 4-6 degree steps. Choose Not sure and we use a typical 46 degrees.',opts:[['43','43\u00B0'],['44','44\u00B0'],['45','45\u00B0'],['46','46\u00B0'],['47','47\u00B0'],['48','48\u00B0'],['unsure','Not sure']]},
@@ -597,7 +639,7 @@ function render(){
       + '<div class="tile tile-link" onclick="pick(\'ball\')">Golf balls<span>Start</span></div>'
       + '<div class="tile">Irons<span>Coming soon</span></div>'
       + '<div class="tile tile-link" onclick="pick(\'wedge\')">Wedges<span>Start</span></div>'
-      + '<div class="tile">Putters<span>Coming soon</span></div></div>'
+      + '<div class="tile tile-link" onclick="pick(\'putter\')">Putters<span>Start</span></div></div>'
       + '<h2>How it works</h2><ul><li>A few quick questions about your game - one per screen, all dropdowns.</li><li>Your swing and your miss drive the picks: features that counter it.</li><li>Three matched options, each with the reason why - then try them in store.</li></ul>'
       + '<div class="callout note"><span class="t">Guidance, not a fitting</span>Recommendations here are general guidance from your answers, not a custom fitting. Nothing is reserved or bought from this page.</div>'
       + '<div class="cap">Prototype for second-hand golf shops and golf stores. '+DATA_NOTE+'</div></div>';
@@ -606,11 +648,11 @@ function render(){
     var mode = a.likePart==='head' ? 'shaft' : (a.likePart==='shaft' ? 'head' : 'club');
     var likesBoth = a.likePart==='both';
     var shaftCat = cat==='driver' ? 'wood' : 'iron';
-    var titles = {club: cat==='driver'?'Your driver matches':(cat==='ball'?'Your ball matches':(cat==='wedge'?'Your wedge setup':'Your iron matches')),
+    var titles = {club: cat==='driver'?'Your driver matches':(cat==='ball'?'Your ball matches':(cat==='wedge'?'Your wedge setup':(cat==='putter'?'Your putter matches':'Your iron matches'))),
                   both: cat==='driver'?'Good news - your driver suits you':'Good news - your irons suit you',
                   shaft: cat==='driver'?'Your shaft matches':'Your iron shaft matches',
                   head: cat==='driver'?'Your head matches':'Your iron head matches'};
-    var intros = {club: cat==='ball'?'Balls matched to your answers, each with the reason why.':(cat==='wedge'?'A wedge setup with lofts, bounce and grinds matched to your swing and conditions.':'The best match from each brand in stock, each chosen to fight your miss.'),
+    var intros = {club: cat==='ball'?'Balls matched to your answers, each with the reason why.':(cat==='wedge'?'A wedge setup with lofts, bounce and grinds matched to your swing and conditions.':(cat==='putter'?'A putter shape and balance matched to your stroke, from every brand in stock.':'The best match from each brand in stock, each chosen to fight your miss.')),
                   both: 'You like both your current head and shaft, so your current set up is great for you. No change needed - but if you fancy trying something new, here are options worth a look, each chosen to fight your miss.',
                   shaft: 'Keeping your current head. Three new shaft options, each chosen to fight your miss.',
                   head: 'Keeping your current shaftSHAFTNAME. The best head from each brand, each chosen to fight your miss.'};
@@ -669,6 +711,27 @@ function render(){
       }
       h += '<div class="cap">* Illustrative match score from placeholder matching logic. Ball specs unverified.</div>';
       picks=brows.map(function(r){return {tier:r[0],name:r[1].c.brand+' '+r[1].c.model,why:ballReason(r[1].c,a)};});
+    } else if (cat==='putter'){
+      var pt=putterType(a);
+      var cap=function(w){return w.charAt(0).toUpperCase()+w.slice(1);};
+      h += '<div class="res-hero"><span class="tier">Your suggested putter type</span>'
+        + '<div class="name">'+cap(pt.balance)+' '+cap(pt.shape)+'</div>'
+        + '<div class="whyfit">'+esc((pt.balance==='face-balanced'?'A face-balanced head stays square for a straight stroke':pt.balance==='toe-hang'?'A toe-hang head releases with an arcing stroke':'Low toe hang suits a slight arc')+'. '+(pt.shape==='mallet'?'A mallet adds forgiveness and alignment help.':'A blade gives classic looks and feel.'))+'</div></div>';
+      var prows=PUTTERS.map(function(p){return {c:p};});
+      if (a.putterBrand && a.putterBrand!=='any'){
+        prows.sort(function(x,y){ return (x.c.brand===a.putterBrand?0:1)-(y.c.brand===a.putterBrand?0:1); });
+      }
+      h += '<h2 class="also">The best putter for it from each brand</h2>';
+      prows.forEach(function(r,i){
+        var model = pt.shape==='blade' ? r.c.blade : r.c.mallet;
+        var full = (r.c.maker?r.c.maker+' ':'')+model;
+        var lbl = (a.putterBrand && a.putterBrand!=='any' && i===0) ? 'Your pick - '+r.c.brand : 'Best '+r.c.brand;
+        h += '<div class="opt"><div><div class="tiername">'+lbl+'</div><div class="name">'+esc(full)+'</div>'
+          + '<div class="detail">'+esc(cap(pt.shape)+' - '+pt.balance+' (spec unverified)')+'. '+esc(putterReason(r.c,a))+'</div></div></div>';
+      });
+      if (a.dexterity==='L') h += '<div class="cap">* Left-hand models can be more limited - check availability in store.</div>';
+      h += '<div class="cap">* Shape and balance follow your stroke and misses. Model specs unverified.</div>';
+      picks=prows.map(function(r){return {tier:'Best '+r.c.brand,name:(r.c.maker?r.c.maker+' ':'')+(pt.shape==='blade'?r.c.blade:r.c.mallet),why:cap(pt.balance)+' '+pt.shape+'; '+putterReason(r.c,a)};});
     } else if (cat==='wedge'){
       var ws=wedgeSetup(a);
       var bounceWord={low:'lower bounce',mid:'mid bounce',high:'higher bounce'};
@@ -787,7 +850,7 @@ function render(){
       + '<div class="navrow" style="flex-wrap:wrap"><button class="nav-back" onclick="back()">\u2039 Back</button>'
       + '<a class="nav-next" style="text-decoration:none;text-align:center" href="'+mailtoHref(picks)+'">Email me these results</a>'
       + '<button class="nav-next" style="flex:0 0 110px;background:var(--teal)" onclick="restart()">Home</button></div>'
-      + '<div class="closing">Iron and putter selectors are in development. Prototype for shop demos. No purchase or reservation happens here.</div></div>';
+      + '<div class="closing">The iron selector is in development. Prototype for shop demos. No purchase or reservation happens here.</div></div>';
   } else {
     var qs=buildQuestions(state.cat, state.a);
     var q=qs[state.step], val=state.a[q.id];
@@ -1089,6 +1152,10 @@ function bookFitting(){ alert('Fitting bookings are coming soon - for now, ask i
     state={cat:'driver',step:0,done:true,a:{dexterity:'R',speed:'100',spin:'2750',currentBrand:'other',currentModel:'other',currentShaftBrand:'Fujikura',currentShaftModel:'Ventus Blue',likePart:'head',prefShaft:'Project X HZRDUS Black',miss:'slice',flight:'mid'}};
   } else if (h==='#results-ball'){
     state={cat:'ball',step:0,done:true,a:{currentBall:'Pro V1',currentFlight:'mid',flightPref:'lower',spinStruggle:'much',area:'tee',feel:'soft',ballBrand:'any'}};
+  } else if (h==='#results-putter'){
+    state={cat:'putter',step:0,done:true,a:{dexterity:'R',stroke:'straight',pmiss:'short',shape:'any',feel:'any',putterBrand:'any'}};
+  } else if (h==='#results-putter-brand'){
+    state={cat:'putter',step:0,done:true,a:{dexterity:'L',stroke:'strong',pmiss:'none',shape:'blade',feel:'firm',putterBrand:'Titleist'}};
   } else if (h==='#results-wedge'){
     state={cat:'wedge',step:0,done:true,a:{dexterity:'R',pwLoft:'46',delivery:'steep',ground:'soft',struggle:'bunkers',face:'square',wedgeBrand:'any'}};
   } else if (h==='#results-wedge-brand'){
@@ -1105,4 +1172,4 @@ function bookFitting(){ alert('Fitting bookings are coming soon - for now, ask i
 </html>
 
 
-<!-- build v38 -->
+<!-- build v39 -->
