@@ -400,6 +400,7 @@ function buildQuestions(cat, a){
     {id:'feel',kind:'dropdown',label:'What feel do you prefer?',help:'Soft, firm or somewhere in between.',opts:[['soft','Soft'],['mid','Medium'],['firm','Firm'],['dontmind','Don\u2019t mind']]},
     {id:'ballBrand',kind:'dropdown',label:'Is there a brand you are interested in trying?',help:'Choose No preference for the widest choice.',opts:[['any','No preference']].concat(BALL_BRANDS.map(function(b){return [b,b];}))}
   ] : cat==='wedge' ? [
+    {id:'dexterity',kind:'dropdown',label:'Do you play right or left handed?',help:'Left-hand lofts and grinds can be more limited - worth checking in store.',opts:[['R','Right handed'],['L','Left handed']]},
     {id:'pwLoft',kind:'dropdown',label:'What loft is your pitching wedge?',help:'Wedges are fitted to fill the gaps from your pitching wedge - usually 4-6 degree steps. Choose Not sure and we use a typical 46 degrees.',opts:[['43','43\u00B0'],['44','44\u00B0'],['45','45\u00B0'],['46','46\u00B0'],['47','47\u00B0'],['48','48\u00B0'],['unsure','Not sure']]},
     {id:'wedgeswing',kind:'wedgecombo',label:'Your swing and where you play',help:'Delivery and ground conditions decide how much bounce you need - bounce stops the club digging or skidding.',opts:[]},
     {id:'struggle',kind:'dropdown',label:'What do you struggle with most around the greens?',help:'This picks the wedge traits that counter it.',opts:[['bunkers','Bunkers'],['tight','Tight or firm lies'],['rough','Heavy rough'],['flop','Flop shots / open-face shots'],['distance','Distance control on full shots']]},
@@ -685,6 +686,7 @@ function render(){
         h += '<div class="opt"><div><div class="tiername">'+lbl+'</div><div class="name">'+esc(r.c.brand+' '+r.c.model)+'</div>'
           + '<div class="detail">'+esc(ws.gap+'\u00B0 '+r.c.grinds[ws.bounce]+' grind, '+ws.sand+'\u00B0 '+r.c.grinds[ws.bounce]+' grind, '+ws.lob+'\u00B0 '+r.c.grinds[ws.lobBounce]+' grind (grind options unverified)')+'. '+esc(wedgeReason(r.c,a))+'</div></div></div>';
       });
+      if (a.dexterity==='L') h += '<div class="cap">* Left-hand lofts and grinds can be more limited - check availability in store.</div>';
       h += '<div class="cap">* Lofts follow your pitching wedge; bounce and grind follow your answers. Grind options per model unverified.</div>';
       picks=wrows.map(function(r){return {tier:'Best '+r.c.brand,name:r.c.brand+' '+r.c.model,why:ws.gap+'/'+ws.sand+'/'+ws.lob+', '+wedgeReason(r.c,a)};});
     } else if (mode==='shaft'){
@@ -1088,9 +1090,9 @@ function bookFitting(){ alert('Fitting bookings are coming soon - for now, ask i
   } else if (h==='#results-ball'){
     state={cat:'ball',step:0,done:true,a:{currentBall:'Pro V1',currentFlight:'mid',flightPref:'lower',spinStruggle:'much',area:'tee',feel:'soft',ballBrand:'any'}};
   } else if (h==='#results-wedge'){
-    state={cat:'wedge',step:0,done:true,a:{pwLoft:'46',delivery:'steep',ground:'soft',struggle:'bunkers',face:'square',wedgeBrand:'any'}};
+    state={cat:'wedge',step:0,done:true,a:{dexterity:'R',pwLoft:'46',delivery:'steep',ground:'soft',struggle:'bunkers',face:'square',wedgeBrand:'any'}};
   } else if (h==='#results-wedge-brand'){
-    state={cat:'wedge',step:0,done:true,a:{pwLoft:'45',delivery:'shallow',ground:'firm',struggle:'flop',face:'open',wedgeBrand:'Titleist'}};
+    state={cat:'wedge',step:0,done:true,a:{dexterity:'L',pwLoft:'45',delivery:'shallow',ground:'firm',struggle:'flop',face:'open',wedgeBrand:'Titleist'}};
   } else if (h==='#results-ball-brand'){
     state={cat:'ball',step:0,done:true,a:{currentBallBrand:'Titleist',currentBall:'Pro V1',currentFlight:'mid',flightPref:'happy',spinStruggle:'happy',area:'short',feel:'dontmind',ballBrand:'Srixon'}};
   } else if (h==='#results-irons'){
@@ -1103,4 +1105,4 @@ function bookFitting(){ alert('Fitting bookings are coming soon - for now, ask i
 </html>
 
 
-<!-- build v37 -->
+<!-- build v38 -->
