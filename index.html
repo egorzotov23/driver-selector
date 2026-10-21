@@ -246,12 +246,8 @@ function buildQuestions(cat, a){
     {id:'dexterity',kind:'dropdown',label:'Do you play left or right handed?',help:'Heads are built right or left-handed, so this filters out anything you cannot use.',opts:[['R','Right-handed'],['L','Left-handed']]},
     {id:'speed',kind:'dropdown',label:'What is your club head speed?',help:'Your driver swing speed. Choose Not sure if you do not know it.',opts:[['80','Under 85 mph'],['90','85-95 mph'],['100','95-105 mph'],['107','105-110 mph'],['112','110-115 mph'],['117','115-120 mph'],['125','120+ mph'],['unsure','Not sure']]},
     {id:'spin',kind:'dropdown',label:'What is your driver spin rate?',help:'Optional - sharing it makes the suggestion more accurate.',opts:[['1900','Under 2,000 rpm'],['2350','2,000-2,700 rpm'],['2850','Over 2,700 rpm'],['skip','Skip / not sure']]},
-    {id:'currentBrand',kind:'dropdown',label:'What is your current driver brand?',help:'This shows us what you are playing now, so we can compare like for like.',opts:brandOpts},
-    {id:'currentModel',kind:'dropdown',label:'Which model is it?',help:'From the demo stock list - choose Other if yours is not there.',opts:(a.currentBrand && a.currentBrand!=='other') ? modelsFor('driver',a.currentBrand).concat([['other','Other / not listed']]) : [['other','Other / not listed']]},
-    {id:'currentShaftBrand',kind:'dropdown',label:'What shaft brand is in your current driver?',kind:'dropdown',help:'The shaft in your current driver.',opts:SHAFT_BRANDS.map(function(b){return [b,b];}).concat([['other','Other / not listed'],['unsure','Not sure']])},
-    (a.currentShaftBrand && a.currentShaftBrand!=='other' && a.currentShaftBrand!=='unsure')
-      ? {id:'currentShaftModel',kind:'shaftcombo',label:'Which shaft is it? Pick the model, weight and flex.',help:'All three are printed on the shaft - a Ventus Blue 6 S is a Ventus Blue, roughly 65g, stiff flex. Choose Not sure for anything you do not know.',opts:[]}
-      : {id:'currentShaftModel',kind:'dropdown',label:'Which shaft model is it?',help:'From the shaft list - choose Other if yours is not there.',opts:[['other','Other / not listed'],['unsure','Not sure']]},
+    {id:'currentBrand',kind:'clubcombo',label:'What is your current driver?',help:'Brand and model of the driver you play now, so we can compare like for like. Choose Other / not listed if yours is not there.',opts:[]},
+    {id:'currentShaftBrand',kind:'shaftcombo',label:'What shaft is in your current driver?',help:'Brand, model, weight and flex are all printed on the shaft - a Ventus Blue 6 S is a Fujikura Ventus Blue, roughly 65g, stiff flex. Choose Not sure for anything you do not know.',opts:[]},
     {id:'likePart',kind:'dropdown',label:'Anything you like about your current set up?',help:'If you love one part, we only suggest the other.',opts:[['head','The head'],['shaft','The shaft'],['both','Both'],['neither','Neither / not sure']]},
     {id:'brand',kind:'dropdown',label:'Do you have a preferred brand?',help:'Some golfers like to stay with a brand they trust. Choose Any for the widest choice.',opts:BRANDS.map(function(b){return [b,b];})},
     {id:'prefHead',kind:'dropdown',label:'Any particular driver you like the look of?',help:'If there is a head you already fancy, we put it first in your matches and weigh the rest around it.',opts:(a.brand && a.brand!=='Any') ? prefHeadOpts('driver',a.brand) : [['any','No preference']]},
@@ -262,8 +258,7 @@ function buildQuestions(cat, a){
     {id:'dexterity',kind:'dropdown',label:'Do you play left or right handed?',help:'Heads are built right or left-handed, so this filters out anything you cannot use.',opts:[['R','Right-handed'],['L','Left-handed']]},
     {id:'speed',kind:'dropdown',label:'What is your club head speed with a 7-iron?',help:'Your swing speed with a 7-iron. Choose Not sure if you do not know it.',opts:[['60','Under 65 mph'],['70','65-75 mph'],['80','75-85 mph'],['90','Over 85 mph'],['unsure','Not sure']]},
     {id:'spin',kind:'dropdown',label:'What is your 7-iron spin rate?',help:'Optional - sharing it makes the suggestion more accurate.',opts:[['4500','Under 5,000 rpm'],['5500','5,000-6,000 rpm'],['6500','6,000-7,000 rpm'],['7500','Over 7,000 rpm'],['skip','Skip / not sure']]},
-    {id:'currentBrand',kind:'dropdown',label:'What is your current iron brand?',help:'This shows us what you are playing now, so we can compare like for like.',opts:brandOpts},
-    {id:'currentModel',kind:'dropdown',label:'Which model is it?',help:'From the demo stock list - choose Other if yours is not there.',opts:(a.currentBrand && a.currentBrand!=='other') ? modelsFor('irons',a.currentBrand).concat([['other','Other / not listed']]) : [['other','Other / not listed']]},
+    {id:'currentBrand',kind:'clubcombo',label:'What is your current iron set?',help:'Brand and model of the irons you play now, so we can compare like for like. Choose Other / not listed if yours is not there.',opts:[]},
     {id:'likePart',kind:'dropdown',label:'Anything you like about your current set up?',help:'If you love one part, we only suggest the other.',opts:[['head','The heads'],['shaft','The shafts'],['both','Both'],['neither','Neither / not sure']]},
     {id:'brand',kind:'dropdown',label:'Do you have a preferred brand?',help:'Some golfers like to stay with a brand they trust. Choose Any for the widest choice.',opts:BRANDS.map(function(b){return [b,b];})},
     {id:'prefHead',kind:'dropdown',label:'Any particular irons you like the look of?',help:'If there is a set you already fancy, we put it first in your matches and weigh the rest around it.',opts:(a.brand && a.brand!=='Any') ? prefHeadOpts('irons',a.brand) : [['any','No preference']]},
@@ -551,12 +546,39 @@ function render(){
         + '<option value="" disabled'+(val?'':' selected')+'>Choose...</option>'
         + q.opts.map(function(o){ return '<option value="'+o[0]+'"'+(val===o[0]?' selected':'')+'>'+esc(o[1])+'</option>'; }).join('')
         + '</select>';
+    } else if (q.kind==='clubcombo'){
+      var cat=state.cat, a=state.a;
+      var ccBrands=BRANDS.filter(function(b){return b!=='Any';}).map(function(b){return [b,b];}).concat([['other','Other / not listed']]);
+      var ccB=a.currentBrand, ccM=a.currentModel;
+      h += '<div class="eyebrow" style="margin:2px 0 6px">Brand</div>'
+        + '<select class="sel" onchange="setA(\'currentBrand\',this.value)">'
+        + '<option value="" disabled'+(ccB?'':' selected')+'>Choose...</option>'
+        + ccBrands.map(function(o){ return '<option value="'+o[0]+'"'+(ccB===o[0]?' selected':'')+'>'+esc(o[1])+'</option>'; }).join('')
+        + '</select>';
+      if (ccB && ccB!=='other'){
+        var ccModels=modelsFor(cat,ccB).concat([['other','Other / not listed']]);
+        h += '<div class="eyebrow" style="margin:16px 0 6px">Model</div>'
+          + '<select class="sel" onchange="setA(\'currentModel\',this.value)">'
+          + '<option value="" disabled'+(ccM?'':' selected')+'>Choose...</option>'
+          + ccModels.map(function(o){ return '<option value="'+o[0]+'"'+(ccM===o[0]?' selected':'')+'>'+esc(o[1])+'</option>'; }).join('')
+          + '</select>';
+      } else if (ccB==='other'){
+        h += '<div class="cap">No problem - we will allow for that in your matches.</div>';
+      }
     } else if (q.kind==='shaftcombo'){
       var a=state.a;
+      var scB=a.currentShaftBrand;
+      var scBrandOpts=SHAFT_BRANDS.map(function(b){return [b,b];}).concat([['other','Other / not listed'],['unsure','Not sure']]);
+      h += '<div class="eyebrow" style="margin:2px 0 6px">Brand</div>'
+        + '<select class="sel" onchange="setA(\'currentShaftBrand\',this.value)">'
+        + '<option value="" disabled'+(scB?'':' selected')+'>Choose...</option>'
+        + scBrandOpts.map(function(o){ return '<option value="'+o[0]+'"'+(scB===o[0]?' selected':'')+'>'+esc(o[1])+'</option>'; }).join('')
+        + '</select>';
+      if (scB && scB!=='other' && scB!=='unsure'){
       var scModels=shaftModelsFor(a.currentShaftBrand).concat([['other','Other / not listed'],['unsure','Not sure']]);
       var scM=a.currentShaftModel;
       var scSh=(scM && scM!=='other' && scM!=='unsure') ? shaftByModel(scM) : null;
-      h += '<div class="eyebrow" style="margin:2px 0 6px">Model</div>'
+      h += '<div class="eyebrow" style="margin:16px 0 6px">Model</div>'
         + '<select class="sel" onchange="setA(\'currentShaftModel\',this.value)">'
         + '<option value="" disabled'+(scM?'':' selected')+'>Choose...</option>'
         + scModels.map(function(o){ return '<option value="'+o[0]+'"'+(scM===o[0]?' selected':'')+'>'+esc(o[1])+'</option>'; }).join('')
@@ -581,6 +603,9 @@ function render(){
       } else if (scM==='other' || scM==='unsure'){
         h += '<div class="cap">No problem - we will allow for that in your matches.</div>';
       }
+      } else if (scB==='other' || scB==='unsure'){
+        h += '<div class="cap">No problem - we will allow for that in your matches.</div>';
+      }
     } else if (q.id==='flight'){
       var stops=q.opts;
       var idx=-1;
@@ -597,6 +622,8 @@ function render(){
       h += '</div>';
     }
     var canNext = Boolean(val);
+    if (q.kind==='clubcombo' && state.a.currentBrand && state.a.currentBrand!=='other') canNext = Boolean(state.a.currentModel);
+    if (q.kind==='shaftcombo') canNext = Boolean(state.a.currentShaftBrand) && (state.a.currentShaftBrand==='other' || state.a.currentShaftBrand==='unsure' || Boolean(state.a.currentShaftModel));
     var last = state.step===qs.length-1;
     h += '<div class="navrow"><button class="nav-back" onclick="back()">\u2039 Back</button>'
       + '<button class="nav-next" '+(canNext?'':'disabled')+' onclick="next()">'+(last?'See my matches':'Next')+'</button></div></div>';
@@ -609,13 +636,13 @@ function setA(id,v){
   if (id==='currentShaftBrand'){ delete state.a.currentShaftModel; delete state.a.currentShaftWeight; delete state.a.currentShaftFlex; }
   if (id==='currentShaftModel'){ delete state.a.currentShaftWeight; delete state.a.currentShaftFlex; }
   if (id==='brand'){ delete state.a.prefHead; }
-  if (id==='currentBrand'){ delete state.a.currentModel; }
+  if (id==='currentBrand'){ delete state.a.currentModel; if (v==='other') state.a.currentModel='other'; }
   render();
 }
 function back(){
   if (state.done){ state.done=false; render(); window.scrollTo(0,0); return; }
   var qs=buildQuestions(state.cat, state.a);
-  if (state.step>0) { state.step--; if (qs[state.step] && qs[state.step].id==='currentModel' && state.a.currentBrand==='other') state.step--; }
+  if (state.step>0) state.step--;
   else state.cat=null;
   render(); window.scrollTo(0,0);
 }
@@ -624,8 +651,6 @@ function next(){
   if (state.step===qs.length-1) { state.done=true; }
   else {
     state.step++;
-    // skip the model dropdown when the brand is Other / not listed
-    if (qs[state.step] && qs[state.step].id==='currentModel' && state.a.currentBrand==='other'){ state.a.currentModel='other'; state.step++; }
   }
   render(); window.scrollTo(0,0);
 }
