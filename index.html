@@ -354,20 +354,26 @@ function wedgeReason(w, a){
 }
 // Current 2026 putter lineups - models verified from press/retail sources, unverified, Egor to confirm.
 var PUTTER_BRANDS = ['Titleist','TaylorMade','Callaway','Ping','Cobra','Cleveland','Mizuno'];
+// Neck options per brand: null = brand has no matching model (flagged in results). All specs unverified.
 var PUTTERS = [
-  {brand:'Titleist',maker:'Scotty Cameron',blade:'Studio Style Newport 2',mallet:'Phantom 11',note:'The milled tour standard'},
-  {brand:'TaylorMade',blade:'TP Juno',mallet:'Spider Tour X',note:'Spider Tour X - the most-played mallet on tour'},
-  {brand:'Callaway',maker:'Odyssey',blade:'Ai-ONE #1',mallet:'Ai-ONE Rossie',note:'Soft insert feel, huge range'},
-  {brand:'Ping',blade:'Scottsdale Anser',mallet:'DS72',note:'Fit-for-stroke fitting pioneers'},
-  {brand:'Cobra',blade:'King Vintage',mallet:'3D Printed Agera',note:'Strong value, 3D-printed tech'},
-  {brand:'Cleveland',blade:'HB Soft 2',mallet:'Frontline Elite',note:'Great value and alignment help'},
-  {brand:'Mizuno',blade:'M.Craft Osaka',mallet:'M.Craft Omoi',note:'Forged feel'}
+  {brand:'Titleist',maker:'Scotty Cameron',blade:'Studio Style Newport 2',mallet:'Phantom 11',note:'The milled tour standard',neck:{plumbers:'Studio Style Newport 2',slant:'Studio Style Newport 2.5',doublebend:'Phantom 11 DB',zero:null}},
+  {brand:'TaylorMade',blade:'TP Juno',mallet:'Spider Tour X',note:'Spider Tour X - the most-played mallet on tour',neck:{plumbers:'TP Soto',slant:'Spider Tour',doublebend:'Spider Tour X',zero:'Spider ZT'}},
+  {brand:'Callaway',maker:'Odyssey',blade:'Ai-ONE #1',mallet:'Ai-ONE Rossie',note:'Soft insert feel, huge range',neck:{plumbers:'Ai-ONE #1',slant:'Ai-ONE Seven S',doublebend:'Ai-ONE Rossie DB',zero:'Ai-ONE Square 2 Square'}},
+  {brand:'Ping',blade:'Scottsdale Anser',mallet:'DS72',note:'Fit-for-stroke fitting pioneers',neck:{plumbers:'Scottsdale Anser',slant:'Scottsdale Anser 2D',doublebend:'Scottsdale DS72',zero:null}},
+  {brand:'Cobra',blade:'King Vintage',mallet:'3D Printed Agera',note:'Strong value, 3D-printed tech',neck:{plumbers:'King Vintage Sport',slant:'King Vintage Nova',doublebend:'3D Printed Agera',zero:null}},
+  {brand:'Cleveland',blade:'HB Soft 2',mallet:'Frontline Elite',note:'Great value and alignment help',neck:{plumbers:'HB Soft 2 #1',slant:'HB Soft 2 #11',doublebend:'Frontline Elite 8.0',zero:null}},
+  {brand:'Mizuno',blade:'M.Craft Osaka',mallet:'M.Craft Omoi',note:'Forged feel',neck:{plumbers:'M.Craft Osaka I',slant:'M.Craft Osaka II',doublebend:'M.Craft Omoi',zero:null}}
 ];
+var NECK_LABEL = {plumbers:'Plumbers Neck',slant:'Slant Neck',doublebend:'Double Bend',zero:'Center Shaft / Zero Torque'};
 function putterType(a){
   var arc = a.stroke==='strong' ? 'high' : a.stroke==='slight' ? 'mid' : a.stroke==='straight' ? 'low' : 'low';
   var shape = (a.shape && a.shape!=='any') ? a.shape : (arc==='low' ? 'mallet' : arc==='high' ? 'blade' : 'mallet');
   if ((a.pmiss==='short' || a.pmiss==='three') && (!a.shape || a.shape==='any')) shape='mallet';
   var balance = arc==='low' ? 'face-balanced' : arc==='high' ? 'toe-hang' : 'low toe-hang';
+  // a chosen neck overrides the stroke-derived balance
+  if (a.neck==='plumbers') balance='toe-hang';
+  else if (a.neck==='slant') balance='low toe-hang';
+  else if (a.neck==='doublebend' || a.neck==='zero') balance='face-balanced';
   return {shape:shape, balance:balance, arc:arc};
 }
 function putterReason(p, a){
@@ -384,6 +390,12 @@ function putterReason(p, a){
   if (a.pmiss==='three') parts.push('three-putts - a forgiving high-MOI head and clear alignment line help');
   if (a.feel==='soft') parts.push('soft insert feel as preferred');
   if (a.feel==='firm') parts.push('crisp milled feel as preferred');
+  if (a.neck && NECK_LABEL[a.neck]){
+    if (a.neck==='zero') parts.push('zero torque - the face wants to stay square through the stroke');
+    else if (a.neck==='doublebend') parts.push('double bend neck keeps the head face-balanced');
+    else if (a.neck==='plumbers') parts.push('plumbers neck gives toe hang for an arcing stroke');
+    else if (a.neck==='slant') parts.push('slant neck gives a touch of toe hang');
+  }
   parts.push(p.note);
   return parts.join('; ')+'.';
 }
@@ -440,6 +452,7 @@ function buildQuestions(cat, a){
     {id:'pmiss',kind:'dropdown',label:'What hurts most on the greens?',help:'This picks the head traits that counter it.',opts:[['right','I miss right'],['left','I miss left'],['short','I leave putts short'],['three','I three-putt too often'],['none','No real pattern']]},
     {id:'shape',kind:'dropdown',label:'What head shape do you like the look of?',help:'Blades are slim and traditional; mallets are bigger and more forgiving.',opts:[['any','No preference'],['blade','Blade'],['mallet','Mallet']]},
     {id:'feel',kind:'dropdown',label:'What feel do you like off the face?',help:'Inserts feel soft; milled faces feel crisper.',opts:[['any','No preference'],['soft','Soft - insert face'],['firm','Firm - milled face']]},
+    {id:'neck',kind:'dropdown',label:'What sort of neck do you want?',help:'The neck sets how the head hangs: plumbers and slant necks add toe hang for arcing strokes, double bend and center shaft keep the face square.',opts:[['plumbers','Plumbers Neck'],['slant','Slant Neck'],['doublebend','Double Bend'],['zero','Center Shaft / Zero Torque'],['any','No preference']]},
     {id:'putterBrand',kind:'dropdown',label:'Is there a brand you are interested in trying?',help:'Choose No preference for the widest choice.',opts:[['any','No preference']].concat(PUTTER_BRANDS.map(function(b){return [b,b];}))}
   ] : cat==='wedge' ? [
     {id:'dexterity',kind:'dropdown',label:'Do you play right or left handed?',help:'Left-hand lofts and grinds can be more limited - worth checking in store.',opts:[['R','Right handed'],['L','Left handed']]},
@@ -724,14 +737,24 @@ function render(){
       h += '<h2 class="also">The best putter for it from each brand</h2>';
       prows.forEach(function(r,i){
         var model = pt.shape==='blade' ? r.c.blade : r.c.mallet;
+        var neckFlag='';
+        if (a.neck && a.neck!=='any'){
+          var nm = r.c.neck[a.neck];
+          if (nm){ model = nm; }
+          else { model = r.c.neck.doublebend; neckFlag = 'No '+NECK_LABEL[a.neck]+' model - closest match is the Double Bend version. '; }
+        }
         var full = (r.c.maker?r.c.maker+' ':'')+model;
         var lbl = (a.putterBrand && a.putterBrand!=='any' && i===0) ? 'Your pick - '+r.c.brand : 'Best '+r.c.brand;
         h += '<div class="opt"><div><div class="tiername">'+lbl+'</div><div class="name">'+esc(full)+'</div>'
-          + '<div class="detail">'+esc(cap(pt.shape)+' - '+pt.balance+' (spec unverified)')+'. '+esc(putterReason(r.c,a))+'</div></div></div>';
+          + '<div class="detail">'+esc(neckFlag+cap(pt.shape)+' - '+pt.balance+(a.neck&&a.neck!=='any'?', '+NECK_LABEL[a.neck]:'')+' (spec unverified)')+'. '+esc(putterReason(r.c,a))+'</div></div></div>';
       });
       if (a.dexterity==='L') h += '<div class="cap">* Left-hand models can be more limited - check availability in store.</div>';
       h += '<div class="cap">* Shape and balance follow your stroke and misses. Model specs unverified.</div>';
-      picks=prows.map(function(r){return {tier:'Best '+r.c.brand,name:(r.c.maker?r.c.maker+' ':'')+(pt.shape==='blade'?r.c.blade:r.c.mallet),why:cap(pt.balance)+' '+pt.shape+'; '+putterReason(r.c,a)};});
+      picks=prows.map(function(r){
+        var m = pt.shape==='blade' ? r.c.blade : r.c.mallet;
+        if (a.neck && a.neck!=='any' && r.c.neck[a.neck]) m = r.c.neck[a.neck];
+        return {tier:'Best '+r.c.brand,name:(r.c.maker?r.c.maker+' ':'')+m,why:cap(pt.balance)+' '+pt.shape+'; '+putterReason(r.c,a)};
+      });
     } else if (cat==='wedge'){
       var ws=wedgeSetup(a);
       var bounceWord={low:'lower bounce',mid:'mid bounce',high:'higher bounce'};
@@ -1153,9 +1176,13 @@ function bookFitting(){ alert('Fitting bookings are coming soon - for now, ask i
   } else if (h==='#results-ball'){
     state={cat:'ball',step:0,done:true,a:{currentBall:'Pro V1',currentFlight:'mid',flightPref:'lower',spinStruggle:'much',area:'tee',feel:'soft',ballBrand:'any'}};
   } else if (h==='#results-putter'){
-    state={cat:'putter',step:0,done:true,a:{dexterity:'R',stroke:'straight',pmiss:'short',shape:'any',feel:'any',putterBrand:'any'}};
+    state={cat:'putter',step:0,done:true,a:{dexterity:'R',stroke:'straight',pmiss:'short',shape:'any',feel:'any',neck:'any',putterBrand:'any'}};
+  } else if (h==='#results-putter-zero'){
+    state={cat:'putter',step:0,done:true,a:{dexterity:'R',stroke:'straight',pmiss:'none',shape:'any',feel:'any',neck:'zero',putterBrand:'any'}};
+  } else if (h==='#results-putter-neck'){
+    state={cat:'putter',step:0,done:true,a:{dexterity:'R',stroke:'slight',pmiss:'none',shape:'any',feel:'any',neck:'plumbers',putterBrand:'any'}};
   } else if (h==='#results-putter-brand'){
-    state={cat:'putter',step:0,done:true,a:{dexterity:'L',stroke:'strong',pmiss:'none',shape:'blade',feel:'firm',putterBrand:'Titleist'}};
+    state={cat:'putter',step:0,done:true,a:{dexterity:'L',stroke:'strong',pmiss:'none',shape:'blade',feel:'firm',neck:'any',putterBrand:'Titleist'}};
   } else if (h==='#results-wedge'){
     state={cat:'wedge',step:0,done:true,a:{dexterity:'R',pwLoft:'46',delivery:'steep',ground:'soft',struggle:'bunkers',face:'square',wedgeBrand:'any'}};
   } else if (h==='#results-wedge-brand'){
@@ -1172,4 +1199,4 @@ function bookFitting(){ alert('Fitting bookings are coming soon - for now, ask i
 </html>
 
 
-<!-- build v40 -->
+<!-- build v41 -->
